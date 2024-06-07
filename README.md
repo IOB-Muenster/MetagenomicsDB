@@ -11,10 +11,10 @@ For further information refer to our manuscript: TBA
 Please cite the manuscript or the URL to this repository if you use MetagenomicsDB in your research.
 
 ## Copyright
-The files whoboys.xlsx and whogirls.xlsx in bin/tests/data/spreadsheets/ were obtained from the website of the
+The files "whoboys.xlsx" and "whogirls.xlsx" in "bin/tests/data/spreadsheets/" were obtained from the website of the
 World Health Organization (WHO):
-*) https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/weight-for-age/expanded-tables/wfa-boys-zscore-expanded-tables.xlsx
-*) https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/weight-for-age/expanded-tables/wfa-girls-zscore-expanded-tables.xls
+* https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/weight-for-age/expanded-tables/wfa-boys-zscore-expanded-tables.xlsx
+* https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/weight-for-age/expanded-tables/wfa-girls-zscore-expanded-tables.xls
 
 For the remaining files, unless stated otherwise, the following copyright agreement applies: 
 
