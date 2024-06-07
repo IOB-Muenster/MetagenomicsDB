@@ -1,0 +1,11 @@
+>7_1_2
+domain: d7_1: 1 (1)
+phylum: p7_1: 1 (1)
+class: c7_1: 1 (1)
+subclass: sc7_1: 1 (1)
+order: o7_1: 1 (1)
+suborder: so7_1: 1 (1)
+family: f7_1: 1 (1)
+genus: g7_1: 1 (1)
+species: s7_1: 1 (1)
+strain: str7_1: 1 (1)

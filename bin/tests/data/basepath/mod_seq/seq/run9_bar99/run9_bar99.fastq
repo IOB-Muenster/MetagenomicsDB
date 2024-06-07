@@ -1,0 +1,8 @@
+@9_99_1 flow_cell_id=newFlow runid=9 barcode=99 basecall_model_version_id=newBase
+GACCA
++
++++++
+@9_99_2 flow_cell_id=newFlow runid=9 barcode=99 basecall_model_version_id=newBase
+GACCAA
++
+++++++

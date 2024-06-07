@@ -1,0 +1,11 @@
+>err_9_2_1
+domain: d9_2: 1 (1)
+phylum: p9_2: 1 (1)
+class: c9_2: 1 (1)
+subclass: sc9_2: 1 (1)
+order: o9_2: 1 (1)
+suborder: so9_2: 1 (1)
+family: f9_2: 1 (1)
+genus: g9_2: 1 (1)
+species: s9_2: 1 (1)
+strain: str9_2: 1 (1)

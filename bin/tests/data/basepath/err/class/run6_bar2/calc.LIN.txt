@@ -1,0 +1,11 @@
+>err_6_2_1
+domain: d6_2: 1 (1)
+phylum: p6_2: 1 (1)
+class: c6_2: 1 (1)
+subclass: sc6_2: 1 (1)
+order: o6_2: 1 (1)
+suborder: so6_2: 1 (1)
+family: f6_2: 1 (1)
+genus: g6_2: 1 (1)
+species: s6_2: 1 (1)
+strain: str6_2: 1 (1)

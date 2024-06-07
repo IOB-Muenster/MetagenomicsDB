@@ -1,0 +1,11 @@
+>10_1_1
+domain: d10_1: 1 (1)
+phylum: p10_1: 1 (1)
+class: c10_1: 1 (1)
+subclass: sc10_1: 1 (1)
+order: o10_1: 1 (1)
+suborder: so10_1: 1 (1)
+family: f10_1: 1 (1)
+genus: g10_1: 1 (1)
+species: s10_1: 1 (1)
+strain: str10_1: 1 (1)

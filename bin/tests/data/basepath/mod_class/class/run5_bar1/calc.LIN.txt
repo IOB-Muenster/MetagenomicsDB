@@ -1,0 +1,11 @@
+>5_1_2
+domain: d5_1: 1 (1)
+phylum: p5_1: 1 (1)
+class: c5_1: 1 (1)
+subclass: sc5_1: 1 (1)
+order: o5_1: 1 (1)
+suborder: so5_1: 1 (1)
+family: f5_1: 1 (1)
+genus: g5_1: 1 (1)
+species: s5_1: 1 (1)
+strain: str5_1: 1 (1)

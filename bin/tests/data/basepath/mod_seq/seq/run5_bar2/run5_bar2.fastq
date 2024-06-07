@@ -1,0 +1,8 @@
+@5_2_1 flow_cell_id=newFlow runid=5 barcode=2 basecall_model_version_id=newBase
+TAATA
++
++++++
+@5_2_2 flow_cell_id=newFlow runid=5 barcode=2 basecall_model_version_id=newBase
+TAATAA
++
+++++++

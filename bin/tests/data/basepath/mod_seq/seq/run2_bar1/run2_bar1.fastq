@@ -1,0 +1,8 @@
+@2_1_1 flow_cell_id=newFlow runid=2 barcode=1 basecall_model_version_id=newBase
+ATAAA
++
++++++
+@2_1_2 flow_cell_id=newFlow runid=2 barcode=1 basecall_model_version_id=newBase
+ATAAAA
++
+++++++

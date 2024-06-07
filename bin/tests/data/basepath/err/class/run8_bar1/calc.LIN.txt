@@ -1,0 +1,11 @@
+>err_8_1_1
+domain: d8_1: 1 (1)
+phylum: p8_1: 1 (1)
+class: c8_1: 1 (1)
+subclass: sc8_1: 1 (1)
+order: o8_1: 1 (1)
+suborder: so8_1: 1 (1)
+family: f8_1: 1 (1)
+genus: g8_1: 1 (1)
+species: s8_1: 1 (1)
+strain: str8_1: 1 (1)

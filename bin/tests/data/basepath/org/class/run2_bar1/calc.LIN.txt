@@ -1,0 +1,11 @@
+>2_1_1
+domain: d2_1: 1 (1)
+phylum: p2_1: 1 (1)
+class: c2_1: 1 (1)
+subclass: sc2_1: 1 (1)
+order: o2_1: 1 (1)
+suborder: so2_1: 1 (1)
+family: f2_1: 1 (1)
+genus: g2_1: 1 (1)
+species: s2_1: 1 (1)
+strain: str2_1: 1 (1)

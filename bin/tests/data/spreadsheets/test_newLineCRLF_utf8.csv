@@ -1,0 +1,14 @@
+Col1	Col2	Col3	Time	Measure1	Measure2
+1	2	3	"ä1
+
+
+"	"Ä1_t1
+"	Ü2_t1
+1			t2	M1_t2	M2_t2
+1			t3	M1_t3	M2_t3
+					
+11	22	33	t1	M11_t1	M22_t1
+11			t2	M11_t2	M22_t2
+11			t3	M11_t3	M22_t3
+					
+111	222	333	t1	M111_t1	M222_t1

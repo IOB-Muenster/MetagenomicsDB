@@ -1,0 +1,8 @@
+@2_99_1 flow_cell_id=flowcell runid=2 barcode=99 basecall_model_version_id=basecaller
+ATCC
++
+!!!!
+@2_99_2 flow_cell_id=flowcell runid=2 barcode=99 basecall_model_version_id=basecaller
+ATCCA
++
+!!!!!

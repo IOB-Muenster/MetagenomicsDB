@@ -1,0 +1,11 @@
+>8_2_2
+domain: d8_2: 1 (1)
+phylum: p8_2: 1 (1)
+class: c8_2: 1 (1)
+subclass: sc8_2: 1 (1)
+order: o8_2: 1 (1)
+suborder: so8_2: 1 (1)
+family: f8_2: 1 (1)
+genus: g8_2: 1 (1)
+species: s8_2: 1 (1)
+strain: str8_2: 1 (1)

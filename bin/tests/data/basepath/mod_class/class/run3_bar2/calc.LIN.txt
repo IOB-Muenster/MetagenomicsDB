@@ -1,0 +1,11 @@
+>3_2_2
+domain: d3_2: 1 (1)
+phylum: p3_2: 1 (1)
+class: c3_2: 1 (1)
+subclass: sc3_2: 1 (1)
+order: o3_2: 1 (1)
+suborder: so3_2: 1 (1)
+family: f3_2: 1 (1)
+genus: g3_2: 1 (1)
+species: s3_2: 1 (1)
+strain: str3_2: 1 (1)

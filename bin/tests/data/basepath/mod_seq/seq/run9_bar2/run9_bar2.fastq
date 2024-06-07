@@ -1,0 +1,8 @@
+@9_2_1 flow_cell_id=newFlow runid=9 barcode=2 basecall_model_version_id=newBase
+GAATA
++
++++++
+@9_2_2 flow_cell_id=newFlow runid=9 barcode=2 basecall_model_version_id=newBase
+GAATAA
++
+++++++

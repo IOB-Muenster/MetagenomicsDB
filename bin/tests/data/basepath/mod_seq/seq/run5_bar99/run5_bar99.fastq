@@ -1,0 +1,8 @@
+@5_99_1 flow_cell_id=newFlow runid=5 barcode=99 basecall_model_version_id=newBase
+TACCA
++
++++++
+@5_99_2 flow_cell_id=newFlow runid=5 barcode=99 basecall_model_version_id=newBase
+TACCAA
++
+++++++

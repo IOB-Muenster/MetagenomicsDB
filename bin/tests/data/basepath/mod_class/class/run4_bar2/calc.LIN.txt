@@ -1,0 +1,11 @@
+>4_2_2
+domain: d4_2: 1 (1)
+phylum: p4_2: 1 (1)
+class: c4_2: 1 (1)
+subclass: sc4_2: 1 (1)
+order: o4_2: 1 (1)
+suborder: so4_2: 1 (1)
+family: f4_2: 1 (1)
+genus: g4_2: 1 (1)
+species: s4_2: 1 (1)
+strain: str4_2: 1 (1)

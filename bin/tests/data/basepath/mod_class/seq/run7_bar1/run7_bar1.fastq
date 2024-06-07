@@ -1,0 +1,8 @@
+@7_1_1 flow_cell_id=flowcell runid=7 barcode=1 basecall_model_version_id=basecaller
+TGAA
++
+!!!!
+@7_1_2 flow_cell_id=flowcell runid=7 barcode=1 basecall_model_version_id=basecaller
+TGAAA
++
+!!!!!

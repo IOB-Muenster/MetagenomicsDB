@@ -1,0 +1,8 @@
+@8_2_1 flow_cell_id=newFlow runid=8 barcode=2 basecall_model_version_id=newBase
+TCATA
++
++++++
+@8_2_2 flow_cell_id=newFlow runid=8 barcode=2 basecall_model_version_id=newBase
+TCATAA
++
+++++++

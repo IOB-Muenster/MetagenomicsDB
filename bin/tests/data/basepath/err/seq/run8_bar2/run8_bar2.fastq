@@ -1,0 +1,8 @@
+@8_2_1 flow_cell_id=flowcell runid=8 barcode=2 basecall_model_version_id=basecaller
+TCAT
++
+!!!!
+@8_2_2 flow_cell_id=flowcell runid=8 barcode=2 basecall_model_version_id=basecaller
+TCATA
++
+!!!!!
