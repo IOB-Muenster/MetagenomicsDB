@@ -4,10 +4,11 @@ to safely store, explore, and export their study results for statistical analyse
 children who are small for their gestational age.
 
 ## Website
-An online instance of MetagenomicsDB with a subset of the study data is available from: TBA
+We provide an online instance of [MetagenomicsDB](https://www.bioinformatics.uni-muenster.de/tools/metagenomicsDB)
+with a subset of the study data.
 
 ## Publication
-For further information refer to our manuscript: TBA
+For further information refer to our [manuscript](https://doi.org/10.1101/2024.06.11.598475).
 Please cite the manuscript or the URL to this repository if you use MetagenomicsDB in your research.
 
 ## Copyright
