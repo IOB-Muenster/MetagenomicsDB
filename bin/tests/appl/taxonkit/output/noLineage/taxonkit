@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Used to examine what happens, if the TaxonKit software returns an output
+# file with no lineage.
+
+if [ "$1" == "version" ]; then
+	echo "v0.19.0"
+else
+	# Relative path to prepared output starting from directory of this script.
+	# The paths to cat and to dirname need to be given, as the PATH will be
+	# manipulated by the test script.
+	/bin/cat $(/usr/bin/dirname "$0")/../../../../data/kraken2/classifications/invalid_tk_noLineage
+fi

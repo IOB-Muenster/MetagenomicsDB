@@ -35,6 +35,12 @@ use warnings;
 use feature 'signatures';
 no warnings qw(experimental::signatures);
 
+use Cwd qw(realpath);
+use File::Temp qw(tempfile);
+use Fcntl qw(F_SETFD);
+use Git::Version::Compare qw(lt_git);
+use IO::Handle qw(flush);
+
 use lib "../";
 use MetagDB::Helpers;
 
@@ -225,6 +231,193 @@ sub parseMetaG ($class, $ranksR = ["domain", "phylum", "class", "subclass", "ord
 	}
 	
 	
+	return \%res;
+}
+
+
+#
+#--------------------------------------------------------------------------------------------------#
+# Parse the standard Kraken2 output format and extract the classification per read.
+#
+# The format of the Kraken2 output is described here: https://github.com/DerrickWood/kraken2/wiki/
+# Manual#output-formats; accessed 2024/11/05. The only columns that are actively processed are
+# zero (classified or not) and two (taxonomy ID). In order to translate the taxonomy IDs to
+# lineages containing the ranks provided by the user, TaxonKit version >= v0.19.0 is required
+# (https://bioinf.shenwei.me/taxonkit/) and must be located in the PATH. In the process, a
+# temporary file is created and automatically deleted by File::Temp.
+# Kraken2 uses NCBI's taxonomy IDs for its standard database (https://github.com/DerrickWood/
+# kraken2/wiki/Manual#standard-kraken-2-database; accessed 2024/11/05) and fake IDs for GreenGenes,
+# RDP, and SILVA (https://github.com/DerrickWood/kraken2/wiki/Manual#special-databases; accessed
+# 2024/11/05). Thus, the function also needs the path to the respective Kraken2 database folder
+# containing the "names.dmp" and "nodes.dmp" files (taxP).
+#--------------------------------------------------------------------------------------------------#
+#
+sub parseKraken2 ($class, $taxP, $ranksR = ["domain", "phylum", "class", "subclass", "order", "suborder", "family", "genus", "species", "strain"]) {
+	#----------------------------------------------------------------------------------------------#
+	# Hardcoded variables
+	#----------------------------------------------------------------------------------------------#
+	my $minTkVersion = "v0.19.0";
+	# Translate user-provided ranks to TaxonKit ranks
+	my %user2tkRanks = (
+		"domain"	=>	'{superkingdom}',
+		"phylum"	=>	'{phylum}',
+		"class"		=>	'{class}',
+		"subclass"	=>	'{subclass}',
+		"order"		=>	'{order}',
+		"suborder"	=>	'{suborder}',
+		"family"	=>	'{family}',
+		"genus"		=>	'{genus}',
+		"species"	=>	'{species}',
+		"strain"	=>	'{subspecies|strain}',
+	);
+	my $taxidIdx = 3;
+
+	
+	#----------------------------------------------------------------------------------------------#
+	# Check inputs
+	#----------------------------------------------------------------------------------------------#
+	foreach my $param ($class, $taxP, $ranksR) {
+		die "ERROR: Not enough arguments." if (not $param or not defined $param);
+	}
+	if ($taxP !~ m/^\//) {
+		$taxP = realpath($taxP) or die "ERROR: Could not get realpath for ->$taxP<-";
+	}
+	if (! -d $taxP) {
+		die "ERROR: ->$taxP<- not a valid directory."
+	}
+	if (not ref($ranksR) or not @{$ranksR}) {
+		die "ERROR: Ranks empty or not a reference";
+	}
+	
+	# Check availability and version of TaxonKit dependency
+	my $tkVersion = qx/taxonkit version 2>&1/ // "";
+	my $rc = $? >> 8;
+	
+	if ($rc != 0) {
+		die "ERROR: Could not execute TaxonKit ->$tkVersion<-"
+	}
+	my $tmp = "";
+	$tmp = $1 if ($tkVersion =~ m/(v[\d\.]+)$/);
+	$tkVersion = $tmp;
+	die "ERROR: Could not get TaxonKit version" if (not $tkVersion);
+	if (lt_git($tkVersion, $minTkVersion)) {
+		die "ERROR: TaxonKit must be updated. Found version ->$tkVersion<-, but must >= ->$minTkVersion<-."
+	}
+	
+	# Translate ranks provided by the user to TaxonKit notation.
+	# Edit this part, if you want to allow any ranks provided
+	# by the user.
+	my $tkRankStr = "";
+	my @ranks = @{$ranksR};
+	foreach my $rank (@ranks) {
+		die "ERROR: Found empty rank name" if (not $rank or $rank =~ m/^\s+$/);
+		if (exists $user2tkRanks{$rank}){
+			$tkRankStr .= ";" . $user2tkRanks{$rank};
+		}
+		else {
+			die "ERROR: Could process ranks provided by user. Ranks must be in ->[" . 
+				join(", ", keys(%user2tkRanks)). "]<-, found ->$rank<-."
+		}
+	}
+	$tkRankStr .= "\"";
+	$tkRankStr =~ s/^;/\"/;
+
+	
+	#----------------------------------------------------------------------------------------------#
+	# Get unclassified reads and check Kraken2 report format
+	#----------------------------------------------------------------------------------------------#
+	my $classified = "";
+	my %res = ();
+	my @lines = @{MetagDB::Helpers::splitStr($class)};
+	die "ERROR: Empty classification file" if (not @lines);
+	
+	foreach my $line (@lines) {
+		# Keep length and kmer info fields, even if they are empty		
+		my @splits = split("\t", $line, -1);
+		die "ERROR: Invalid Kraken2 report format ->" . join("\t", @splits) . "<-"
+			if (@splits != 5);
+		my ($isClass, $readId, $taxId, $len, $kmer) = @splits;
+		# TaxID 0 is possible
+		die "ERROR: Invalid Kraken2 report format ->" . join("\t", @splits) . "<-"
+			if (not $isClass or not $readId or $taxId eq "" or $taxId !~ m/^\d+$/);
+		if ($isClass eq "U") {
+			die "ERROR: Invalid Kraken2 report format ->" . join("\t", @splits) . "<-"
+				if ($taxId != 0);
+			die "ERROR: Read ->$readId<- marked as unclassified more than once."
+				if (exists $res{$readId});
+			$res{$readId} = {};
+			# Unclassified = UNMATCHED in parseMetaG
+			foreach my $rank (@ranks) {
+				$res{$readId}->{$rank} = "UNMATCHED"
+			}
+		}
+		elsif ($isClass eq "C") {
+			die "ERROR: Invalid Kraken2 report format ->" . join("\t", @splits) . "<-"
+				if ($taxId == 0);
+			$classified .= $line . "\n";
+		}
+		else {
+			die "ERROR: Invalid Kraken2 report format ->" . join("\t", @splits) . "<-";
+		}
+	}
+	# No reads classified by Kraken2
+	return \%res if ($classified =~ m/^\s*$/);
+	
+	
+	#----------------------------------------------------------------------------------------------#
+	# Assign classified reads to lineage
+	#----------------------------------------------------------------------------------------------#
+	# Write classified reads to temporary file. Remove file automatically.
+	# Includes some File::Temp magic to allow TaxonKit to work with the filehandle
+	# which is considered best practice.
+	my $tmpFh = tempfile(SUFFIX => '_parseKraken2', UNLINK => 1) or die "ERROR: Cannot open temporary file";
+	print $tmpFh $classified;
+	$tmpFh->flush;
+	fcntl($tmpFh, F_SETFD, 0) or die "ERROR: Cannot set flag";
+	
+	# TaxonKit will use the taxonomy information in --data-dir to translate the taxonomy IDs
+	# found in the -I'th column of the temporary classification file to full lineages.
+	# The ranks of the full lineage are defined by -f. Taxa with no name are called "0" (-r)
+	# and unclassified ranks are left empty (-T).
+	my $cmd = "taxonkit reformat2 --data-dir $taxP -I $taxidIdx -r \"0\" -T -f $tkRankStr /dev/fd/". fileno($tmpFh);
+	my $classification = qx/$cmd 2>\/dev\/null/;
+	$rc = $? >> 8;
+	
+	# Removes temporary file
+	close($tmpFh);
+	
+	# Return code from TaxonKit
+	if ($rc != 0) {
+		die "ERROR: TaxonKit could not get lineage for classifications."
+	}
+	
+	my @classifications = @{MetagDB::Helpers::splitStr($classification)};
+	die "ERROR: TaxonKit returned an empty classification file" if (not @classifications);
+	foreach my $class (@classifications) {
+		my @splits = split("\t", $class);
+		die "ERROR: TaxonKit returned an unexpected file format ->" . join("\t", @splits) . "<-"
+			if (@splits != 6);
+		my ($isClass, $readId, $taxId, $len, $kmer, $lineage) = @splits;
+		# Unclassified reads were filtered before, so taxonomy ID may also not be "0"
+		die "ERROR: TaxonKit returned an unexpected file format ->" . join("\t", @splits) . "<-"
+			if (not $readId or $isClass ne "C" or not $taxId or $taxId !~ m/^\d+$/ or not $lineage);	
+		# Force split to keep empty entries --> unclassified ranks
+		my @lineages = split(";", $lineage, -1);
+		die "ERROR: TaxonKit returned an unexpected file format ->" . join("\t", @splits) . "<-"
+			if (@lineages != @ranks);
+		
+		die "ERROR: Read ->$readId<- classified more than once." if (exists $res{$readId});
+		$res{$readId} = {};
+		for (my $i = 0; $i <= $#ranks; $i++) {
+			my $lin = $lineages[$i];
+			# Taxon without a name
+			$lin = undef if ($lin =~ m/^0$/);
+			# Unclassified rank
+			$lin = "UNMATCHED" if (defined $lin and not $lin);
+			
+			$res{$readId}->{$ranks[$i]} = $lin;
+		}
+	}
 	return \%res;
 }
 

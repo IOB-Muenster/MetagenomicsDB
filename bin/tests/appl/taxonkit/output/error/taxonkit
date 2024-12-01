@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Used to examine what happens, if the TaxonKit software fails during
+# reformat.
+
+if [ "$1" == "version" ]; then
+	echo "v0.19.0"
+else
+	echo $PATH
+	# Strip first path from list, as it contains this fake TaxonKit script
+	PATH=$(echo "${PATH}" | perl -pne '$_ =~ s/[^:]+://')
+	echo $PATH
+	# Call the real TaxonKit with a wrong command
+	taxonkit r_e_f_o_r_m_a_t_2
+fi

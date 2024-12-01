@@ -88,6 +88,37 @@ sub getLetter  {
 
 #
 #--------------------------------------------------------------------------------------------------#
+# Internal function to sort an expectation array of arrays as the database does to the results
+#--------------------------------------------------------------------------------------------------#
+#
+sub sort_expec_db_style {
+	my %lins = (
+		"strain" 	=>	1,
+		"species"	=>	2,
+		"genus"		=>	3,
+		"family"	=>	4,
+		"suborder"	=>	5,
+		"order"		=>	6,
+		"subclass"	=>	7,
+		"class"		=>	8,
+		"phylum"	=>	9,
+		"domain"	=>	10
+	);
+	
+	$a->[2] cmp $b->[2]
+	or
+	$a->[3] cmp $b->[3]
+	or
+	$a->[4] cmp $b->[4]
+	or
+	$lins{$b->[6]} <=> $lins{$a->[6]}
+	or
+	$a->[5] cmp $b->[5]
+}
+
+
+#
+#--------------------------------------------------------------------------------------------------#
 # Create database relations, functions, and views
 #--------------------------------------------------------------------------------------------------#
 #
@@ -183,12 +214,14 @@ sub dropDB  {
 #
 #--------------------------------------------------------------------------------------------------#
 # Test to insert/update measures (standards only indirectly checked via z-score)
+# For these tests, the classifier does not matter.
 #--------------------------------------------------------------------------------------------------#
 #
 sub test_measures {
 	my $dbh = $_[0];
 	my $schema = $_[1];
 	my $basePath = $_[2];
+	my $lib = $_[3];
 	
 	my $err = "";
 	my $resR = "";
@@ -1933,8 +1966,9 @@ sub test_measures {
 		$resSeqClassR = "";
 		$resChangeR = "";
 		
-		$err = qx{perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
-			--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
+		$err = qx{export PERL5LIB="$lib"; \\
+			perl ../importSGA.pl --debug --verbose --table $testF_noRunBar \\
+			--data $basePath --format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 			--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 		};
 		$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
@@ -2002,7 +2036,8 @@ sub test_measures {
 		try {
 			$err = "";
 			
-			qx{perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
+			qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};
@@ -2032,7 +2067,8 @@ sub test_measures {
 			$resChangeR = "";
 						
 			# This insert should do nothing, as data is identical to old data
-			$err = qx{perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
+			$err = qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};			
@@ -2110,7 +2146,8 @@ sub test_measures {
 		try {
 			$err = "";
 			
-			qx{perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
+			qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};
@@ -2135,7 +2172,8 @@ sub test_measures {
 			$resSeqClassR = "";
 			$resChangeR = "";
 			
-			$err = qx{perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
+			$err = qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};			
@@ -2213,7 +2251,8 @@ sub test_measures {
 		try {
 			$err = "";
 			
-			qx{perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
+			qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};
@@ -2242,7 +2281,8 @@ sub test_measures {
 			$resSeqClassR = "";
 			$resChangeR = "";
 			
-			$err = qx{perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
+			$err = qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};			
@@ -2324,7 +2364,8 @@ sub test_measures {
 		try {
 			$err = "";
 			
-			qx{perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
+			qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};
@@ -2348,7 +2389,8 @@ sub test_measures {
 			$resSeqClassR = "";
 			$resChangeR = "";
 			
-			$err = qx{perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
+			$err = qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};			
@@ -2482,7 +2524,8 @@ sub test_measures {
 		try {
 			$err = "";
 			
-			qx{perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
+			qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 		};
@@ -2506,7 +2549,8 @@ sub test_measures {
 			$resSeqClassR = "";
 			$resChangeR = "";
 			
-			$err = qx{perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
+			$err = qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};			
@@ -2659,7 +2703,8 @@ sub test_measures {
 		try {
 			$err = "";
 			
-			qx{perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
+			qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};
@@ -2683,7 +2728,8 @@ sub test_measures {
 			$resSeqClassR = "";
 			$resChangeR = "";
 			
-			$err = qx{perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
+			$err = qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};			
@@ -2763,7 +2809,8 @@ sub test_measures {
 		try {
 			$err = "";
 			
-			qx{perl ../importSGA.pl --debug --verbose --table $testF_noRunBar_oneSamplLess --data $basePath \\
+			qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $testF_noRunBar_oneSamplLess --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};
@@ -2788,7 +2835,8 @@ sub test_measures {
 			$resSeqClassR = "";
 			$resChangeR = "";
 			
-			$err = qx{perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
+			$err = qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};			
@@ -2862,7 +2910,8 @@ sub test_measures {
 		try {
 			$err = "";
 			
-			qx{perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
+			qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};
@@ -2884,7 +2933,8 @@ sub test_measures {
 			$resSeqClassR = "";
 			$resChangeR = "";
 			
-			$err = qx{perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
+			$err = qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};
@@ -2957,7 +3007,8 @@ sub test_measures {
 		try {
 			$err = "";
 			
-			qx{perl ../importSGA.pl --debug --verbose --table $testF_noRunBar_noFirst --data $basePath \\
+			qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $testF_noRunBar_noFirst --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};
@@ -2980,7 +3031,8 @@ sub test_measures {
 			$resSeqClassR = "";
 			$resChangeR = "";
 			
-			$err = qx{perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
+			$err = qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};
@@ -3055,7 +3107,8 @@ sub test_measures {
 		try {
 			$err = "";
 			
-			qx{perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
+			qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};
@@ -3079,7 +3132,8 @@ sub test_measures {
 			$resSeqClassR = "";
 			$resChangeR = "";
 			
-			$err = qx{perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
+			$err = qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};			
@@ -3158,7 +3212,8 @@ sub test_measures {
 		try {
 			$err = "";
 			
-			qx{perl ../importSGA.pl --debug --verbose --table $testF_noRunBar_addMeasure --data $basePath \\
+			qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $testF_noRunBar_addMeasure --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};
@@ -3182,7 +3237,8 @@ sub test_measures {
 			$resSeqClassR = "";
 			$resChangeR = "";
 			
-			$err = qx{perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
+			$err = qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};			
@@ -3257,7 +3313,8 @@ sub test_measures {
 		try {
 			$err = "";
 			
-			qx{perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
+			qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null  \\ 
 			};
@@ -3278,7 +3335,8 @@ sub test_measures {
 			$resSeqClassR = "";
 			$resChangeR = "";
 			
-			$err = qx{perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
+			$err = qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};			
@@ -3337,6 +3395,7 @@ sub test_measures {
 #
 #--------------------------------------------------------------------------------------------------#
 # Test to insert/update sequences (taxonomy not tested)
+# For these tests, the classifier does not matter.
 #--------------------------------------------------------------------------------------------------#
 #
 sub test_seqs {
@@ -3346,6 +3405,7 @@ sub test_seqs {
 	my $randDir = $_[3];
 	my $expecMeasureR = $_[4];
 	my $expecDerivedR = $_[5];
+	my $lib = $_[6];
 	
 	my $err = "";
 	my $resR = "";
@@ -3507,9 +3567,9 @@ sub test_seqs {
 	];
 	
 	my $testF_noRunBar = "./data/spreadsheets/test_SGA_noRunBar.xlsx";
-	my $testF_seq = "./data/spreadsheets/test_SGA.xlsx";
-	my $testF_seq_onePat = "./data/spreadsheets/test_SGA_onePat.xlsx";
-	my $testF_seq_oneSampl = "./data/spreadsheets/test_SGA_oneSampl.xlsx";
+	my $testF_seq = "./data/spreadsheets/test_SGA_MetaG.xlsx";
+	my $testF_seq_onePat = "./data/spreadsheets/test_SGA_onePat_MetaG.xlsx";
+	my $testF_seq_oneSampl = "./data/spreadsheets/test_SGA_oneSampl_MetaG.xlsx";
 	my $testF_updateSeq = "./data/spreadsheets/test_SGA_updateSeq.xlsx";
 
 	
@@ -3526,7 +3586,8 @@ sub test_seqs {
 		$resSeqR = "";
 		$resChangeR = "";
 					
-		$err = qx{perl ../importSGA.pl --debug --verbose --table $testF_seq --data $randDir \\
+		$err = qx{export PERL5LIB="$lib"; \\
+			perl ../importSGA.pl --debug --verbose --table $testF_seq --data $randDir \\
 			--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 			--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 		};
@@ -3603,7 +3664,8 @@ sub test_seqs {
 		$resSeqR = "";
 		$resChangeR = "";
 					
-		$err = qx{perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath \\
+		$err = qx{export PERL5LIB="$lib"; \\
+			perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath \\
 			--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 			--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 		};
@@ -3678,7 +3740,8 @@ sub test_seqs {
 		try {
 			$err = "";
 			
-			qx{perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
+			qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};
@@ -3702,7 +3765,8 @@ sub test_seqs {
 			$resSeqR = "";
 			$resChangeR = "";
 						
-			$err = qx{perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
+			$err = qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};			
@@ -3779,7 +3843,8 @@ sub test_seqs {
 		try {
 			$err = "";
 			
-			qx{perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath \\
+			qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};
@@ -3810,7 +3875,8 @@ sub test_seqs {
 			$resSeqR = "";
 			$resChangeR = "";
 						
-			$err = qx{perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
+			$err = qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
 				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 			};			
@@ -3880,7 +3946,8 @@ sub test_seqs {
 		$resSeqR = "";
 
 		# Add Excel with sequences		
-		qx{perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath \\
+		qx{export PERL5LIB="$lib"; \\
+			perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath \\
 			--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 			--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 		};
@@ -3893,7 +3960,8 @@ sub test_seqs {
 		);
 		
 		# Attempt to remove sequences by providing Excel with empty run_bar field			
-		$err = qx{perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
+		$err = qx{export PERL5LIB="$lib"; \\
+			perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
 			--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 			--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 		};			
@@ -3960,7 +4028,8 @@ sub test_seqs {
 		$tmp_expecChangeR = "";
 
 		# Add Excel with sequences		
-		qx{perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath \\
+		qx{export PERL5LIB="$lib"; \\
+			perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath \\
 			--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 			--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 		};
@@ -3973,7 +4042,8 @@ sub test_seqs {
 		);
 		
 		# Attempt to remove sequences by providing Excel with empty run_bar field			
-		$err = qx{perl ../importSGA.pl --debug --verbose --table $testF_seq --data $randDir \\
+		$err = qx{export PERL5LIB="$lib"; \\
+			perl ../importSGA.pl --debug --verbose --table $testF_seq --data $randDir \\
 			--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 			--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 		};			
@@ -4087,13 +4157,15 @@ sub test_seqs {
 		$tmp_expecSeqR = [sort {$a->[5] cmp $b->[5] || $a->[0] cmp $b->[0]} @tmps];
 
 		# Add Excel with sequences		
-		qx{perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath \\
+		qx{export PERL5LIB="$lib"; \\
+			perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath \\
 			--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 			--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 		};
 				
 		# Attempt to update sequences by providing Excel with different run and barcode
-		$err = qx{perl ../importSGA.pl --debug --verbose --table $testF_updateSeq --data $basePath \\
+		$err = qx{export PERL5LIB="$lib"; \\
+			perl ../importSGA.pl --debug --verbose --table $testF_updateSeq --data $basePath \\
 			--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 			--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 		};			
@@ -4178,14 +4250,16 @@ sub test_seqs {
 		my $basePath_mod = $basePath =~ s/org/mod_seq/r;
 
 		# Add Excel with sequences		
-		qx{perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath \\
+		qx{export PERL5LIB="$lib"; \\
+			perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath \\
 			--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 			--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 		};
 				
 		# Add Excel with sequences that vary in flowcellid, callermodel, nucs, and quality
 		# => values that can actually be updated
-		$err = qx{perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath_mod \\
+		$err = qx{export PERL5LIB="$lib"; \\
+			perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath_mod \\
 			--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
 			--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
 		};
@@ -4257,6 +4331,8 @@ sub test_class {
 	my $randDir = $_[3];
 	my $expecMeasureR = $_[4];
 	my $expecDerivedR = $_[5];
+	my $lib = $_[6];
+	my $taxP = $_[7];
 	
 	my $err = "";
 	my $resR = "";
@@ -4264,6 +4340,9 @@ sub test_class {
 	my $resSeqR = "";
 	my $resClassR = "";
 	my $resChangeR = "";
+	
+	# Classifiers to be tested
+	my @classifiers = ('MetaG', 'Kraken2');
 	
 	# Control sample sequences inserted for every case sample
 	# alias, accession, birthdate, createdate, iscontrol, readid, runid, barcode, flowcellid, callermodel,
@@ -4361,7 +4440,7 @@ sub test_class {
 	# runid, barcode, readid, program, database, name, rank
 	# control samples appear twice, as each individual control sample is used
 	# as controls for each barcode of a run. 
-	my $expecClassR = [
+	my $expecClassMetaGR = [
 		['10', '1', '10_1_1', 'MetaG', 'RDP', 'd10_1', 'domain'],
 		['10', '1', '10_1_1', 'MetaG', 'RDP', 'p10_1', 'phylum'],
 		['10', '1', '10_1_1', 'MetaG', 'RDP', 'c10_1', 'class'],
@@ -5243,7 +5322,12 @@ sub test_class {
 		['9', '99', '9_99_2', 'MetaG', 'RDP', 'FILTERED', 'strain'],
 		['9', '99', '9_99_2', 'MetaG', 'RDP', 'FILTERED', 'strain']
 	];
-	my $expecClass_onePatR = [
+	my $expecClassKraken2R = dclone($expecClassMetaGR);
+	foreach my $ref (@{$expecClassKraken2R}){
+		$ref->[3] = "Kraken2";
+	}
+	
+	my $expecClass_onePatMetaGR = [
 		['10', '1', '10_1_1', 'MetaG', 'RDP', 'd10_1', 'domain'],
 		['10', '1', '10_1_1', 'MetaG', 'RDP', 'p10_1', 'phylum'],
 		['10', '1', '10_1_1', 'MetaG', 'RDP', 'c10_1', 'class'],
@@ -5685,7 +5769,12 @@ sub test_class {
 		['9', '99', '9_99_2', 'MetaG', 'RDP', 'FILTERED', 'species'],
 		['9', '99', '9_99_2', 'MetaG', 'RDP', 'FILTERED', 'strain']
 	];
-	my $expecClass_oneSamplR = [
+	my $expecClass_onePatKraken2R = dclone($expecClass_onePatMetaGR);
+	foreach my $ref (@{$expecClass_onePatKraken2R}){
+		$ref->[3] = "Kraken2";
+	}
+	
+	my $expecClass_oneSamplMetaGR = [
 		['1', '1', '1_1_1', 'MetaG', 'RDP', 'd1_1', 'domain'],
 		['1', '1', '1_1_1', 'MetaG', 'RDP', 'p1_1', 'phylum'],
 		['1', '1', '1_1_1', 'MetaG', 'RDP', 'c1_1', 'class'],
@@ -5727,10 +5816,15 @@ sub test_class {
 		['1', '99', '1_99_2', 'MetaG', 'RDP', 'FILTERED', 'species'],
 		['1', '99', '1_99_2', 'MetaG', 'RDP', 'FILTERED', 'strain']
 	];
+	my $expecClass_oneSamplKraken2R = dclone($expecClass_oneSamplMetaGR);
+	foreach my $ref (@{$expecClass_oneSamplKraken2R}){
+		$ref->[3] = "Kraken2";
+	}
+	
 	# additional new classifications:
 	# run 1 barcode 1: read 1: FILTERED; read 2: classification from read 1
 	# run 1 barcode 99: read 1: FILTERED; read 2: classification from read 1
-	my $expecClass_oneSampl_updatedR = [
+	my $expecClass_oneSampl_updatedMetaGR = [
 		['10', '1', '10_1_1', 'MetaG', 'RDP', 'd10_1', 'domain'],
 		['10', '1', '10_1_1', 'MetaG', 'RDP', 'p10_1', 'phylum'],
 		['10', '1', '10_1_1', 'MetaG', 'RDP', 'c10_1', 'class'],
@@ -6652,10 +6746,15 @@ sub test_class {
 		['9', '99', '9_99_2', 'MetaG', 'RDP', 'FILTERED', 'strain'],
 		['9', '99', '9_99_2', 'MetaG', 'RDP', 'FILTERED', 'strain']
 	];
+	my $expecClass_oneSampl_updatedKraken2R = dclone($expecClass_oneSampl_updatedMetaGR);
+	foreach my $ref (@{$expecClass_oneSampl_updatedKraken2R}){
+		$ref->[3] = "Kraken2";
+	}
+	
 	# additional new classifications:
 	# run * barcode 1: read 1: FILTERED; read 2: classification from read 1
 	# run * barcode 99: read 1: FILTERED; read 2: classification from read 1
-	my $expecClass_onePat_updatedR = [
+	my $expecClass_onePat_updatedMetaGR = [
 		['10', '1', '10_1_1', 'MetaG', 'RDP', 'FILTERED', 'domain'],
 		['10', '1', '10_1_1', 'MetaG', 'RDP', 'd10_1', 'domain'],
 		['10', '1', '10_1_1', 'MetaG', 'RDP', 'FILTERED', 'phylum'],
@@ -7975,12 +8074,16 @@ sub test_class {
 		['9', '99', '9_99_2', 'MetaG', 'RDP', 'UNMATCHED', 'species'],
 		['9', '99', '9_99_2', 'MetaG', 'RDP', 'FILTERED', 'strain'],
 		['9', '99', '9_99_2', 'MetaG', 'RDP', 'FILTERED', 'strain'],
-		['9', '99', '9_99_2', 'MetaG', 'RDP', 'UNMATCHED', 'strain'],
-		
+		['9', '99', '9_99_2', 'MetaG', 'RDP', 'UNMATCHED', 'strain']
 	];
+	my $expecClass_onePat_updatedKraken2R = dclone($expecClass_onePat_updatedMetaGR);
+	foreach my $ref (@{$expecClass_onePat_updatedKraken2R}){
+		$ref->[3] = "Kraken2";
+	}
+	
 	# additional new classifications:
 	# run * barcode *: read 1: FILTERED; read 2: classification from read 1
-	my $expecClass_updatedR = [
+	my $expecClass_updatedMetaGR = [
 		['10', '1', '10_1_1', 'MetaG', 'RDP', 'FILTERED', 'domain'],
 		['10', '1', '10_1_1', 'MetaG', 'RDP', 'd10_1', 'domain'],
 		['10', '1', '10_1_1', 'MetaG', 'RDP', 'FILTERED', 'phylum'],
@@ -9742,10 +9845,15 @@ sub test_class {
 		['9', '99', '9_99_2', 'MetaG', 'RDP', 'UNMATCHED', 'strain'],
 		['9', '99', '9_99_2', 'MetaG', 'RDP', 'UNMATCHED', 'strain']
 	];
+	my $expecClass_updatedKraken2R = dclone($expecClass_updatedMetaGR);
+	foreach my $ref (@{$expecClass_updatedKraken2R}){
+		$ref->[3] = "Kraken2";
+	}
+	
 	# additional new classifications with database MTX:
 	# run 1 barcode 1: read 1: FILTERED; read 2: classification from read 1 RDP
 	# run 1 barcode 99: read 1: FILTERED; read 2: classification from read 1 RDP
-	my $expecClass_updatedClassDb_oneSamplR = [
+	my $expecClass_updatedClassDb_oneSamplMetaGR = [
 		['10', '1', '10_1_1', 'MetaG', 'RDP', 'd10_1', 'domain'],
 		['10', '1', '10_1_1', 'MetaG', 'RDP', 'p10_1', 'phylum'],
 		['10', '1', '10_1_1', 'MetaG', 'RDP', 'c10_1', 'class'],
@@ -10667,7 +10775,12 @@ sub test_class {
 		['9', '99', '9_99_2', 'MetaG', 'RDP', 'FILTERED', 'strain'],
 		['9', '99', '9_99_2', 'MetaG', 'RDP', 'FILTERED', 'strain']
 	];
-	my $expecClass_updatedClassDb_onePatR = [
+	my $expecClass_updatedClassDb_oneSamplKraken2R = dclone($expecClass_updatedClassDb_oneSamplMetaGR);
+	foreach my $ref (@{$expecClass_updatedClassDb_oneSamplKraken2R}){
+		$ref->[3] = "Kraken2";
+	}
+	
+	my $expecClass_updatedClassDb_onePatMetaGR = [
 		['10', '1', '10_1_1', 'MetaG', 'MTX', 'FILTERED', 'domain'],
 		['10', '1', '10_1_1', 'MetaG', 'MTX', 'FILTERED', 'phylum'],
 		['10', '1', '10_1_1', 'MetaG', 'MTX', 'FILTERED', 'class'],
@@ -11989,7 +12102,12 @@ sub test_class {
 		['9', '99', '9_99_2', 'MetaG', 'RDP', 'FILTERED', 'strain'],
 		['9', '99', '9_99_2', 'MetaG', 'RDP', 'FILTERED', 'strain']
 	];
-	my $expecClass_updatedClassDbR = [
+	my $expecClass_updatedClassDb_onePatKraken2R = dclone($expecClass_updatedClassDb_onePatMetaGR);
+	foreach my $ref (@{$expecClass_updatedClassDb_onePatKraken2R}){
+		$ref->[3] = "Kraken2";
+	}
+	
+	my $expecClass_updatedClassDbMetaGR = [
 		['10', '1', '10_1_1', 'MetaG', 'MTX', 'FILTERED', 'domain'],
 		['10', '1', '10_1_1', 'MetaG', 'MTX', 'FILTERED', 'phylum'],
 		['10', '1', '10_1_1', 'MetaG', 'MTX', 'FILTERED', 'class'],
@@ -13750,7 +13868,53 @@ sub test_class {
 		['9', '99', '9_99_2', 'MetaG', 'RDP', 'FILTERED', 'species'],
 		['9', '99', '9_99_2', 'MetaG', 'RDP', 'FILTERED', 'strain'],
 		['9', '99', '9_99_2', 'MetaG', 'RDP', 'FILTERED', 'strain']
-	];	
+	];
+	my $expecClass_updatedClassDbKraken2R = dclone($expecClass_updatedClassDbMetaGR);
+	foreach my $ref (@{$expecClass_updatedClassDbKraken2R}){
+		$ref->[3] = "Kraken2";
+	}
+	
+	
+	# The test case with a changed program has a similar structure to the test case with a changed database
+	my $expecClass_updatedClassPrgrmMetaGR = dclone($expecClass_updatedClassDbMetaGR);
+	my $expecClass_updatedClassPrgrmKraken2R = dclone($expecClass_updatedClassDbKraken2R);
+	my $expecClass_updatedClassPrgrm_onePatMetaGR = dclone($expecClass_updatedClassDb_onePatMetaGR);
+	my $expecClass_updatedClassPrgrm_onePatKraken2R = dclone($expecClass_updatedClassDb_onePatKraken2R);
+	my $expecClass_updatedClassPrgrm_oneSamplMetaGR = dclone($expecClass_updatedClassDb_oneSamplMetaGR);
+	my $expecClass_updatedClassPrgrm_oneSamplKraken2R = dclone($expecClass_updatedClassDb_oneSamplKraken2R);
+	
+	foreach my $expec (
+		$expecClass_updatedClassPrgrmMetaGR,
+		$expecClass_updatedClassPrgrm_onePatMetaGR,
+		$expecClass_updatedClassPrgrm_oneSamplMetaGR
+	) {
+		# Restore database name and change program name for previously altered entries.
+		foreach my $ref (@{$expec}) {
+			if ($ref->[4] eq "MTX") {
+				$ref->[4] = "RDP";
+				$ref->[3] = "Kraken2"
+			}
+		}
+		my @tmps = sort sort_expec_db_style @{$expec};
+		$expec = dclone(\@tmps);
+	}
+	foreach my $expec (
+		$expecClass_updatedClassPrgrmKraken2R,
+		$expecClass_updatedClassPrgrm_onePatKraken2R,
+		$expecClass_updatedClassPrgrm_oneSamplKraken2R
+	) {
+		# Restore database name and change program name for previously altered entries.
+		foreach my $ref (@{$expec}) {
+			if ($ref->[4] eq "MTX") {
+				$ref->[3] = "MetaG";
+				$ref->[4] = "RDP";
+			}
+		}
+		my @tmps = sort sort_expec_db_style @{$expec};
+		$expec = dclone(\@tmps);
+	}
+
+		
 	# id_change: patient, sample, measurement, type, sequence, classification, taxclass, taxonomy
 	my $expecChangeR = [
 		[1, 1, 1, 1, 1, 2, 2, 2], # case sample with sequences and classifications/taxclass/taxonomy
@@ -13759,17 +13923,70 @@ sub test_class {
 		[1, 1, undef, undef, undef, undef, undef, undef] # control sample without measurement/type/sequences/classifications/taxclass/taxonomy
 	];
 	
+	# Expectations where different versions are required for each classifier
+	# classifier name internal_hash
+	my %expecs = (
+		'MetaG' 	=>	{
+			'expecClassR'									=>	$expecClassMetaGR,
+			'expecClass_onePatR'							=>	$expecClass_onePatMetaGR,
+			'expecClass_oneSamplR'							=>	$expecClass_oneSamplMetaGR,
+			'expecClass_oneSampl_updatedR'					=>	$expecClass_oneSampl_updatedMetaGR,
+			'expecClass_onePat_updatedR'					=>	$expecClass_onePat_updatedMetaGR,
+			'expecClass_updatedR'							=>	$expecClass_updatedMetaGR,
+			'expecClass_updatedClassDb_oneSamplR'			=>	$expecClass_updatedClassDb_oneSamplMetaGR,
+			'expecClass_updatedClassDb_onePatR'				=>	$expecClass_updatedClassDb_onePatMetaGR,
+			'expecClass_updatedClassDbR'					=>	$expecClass_updatedClassDbMetaGR,
+			'expecClass_updatedClassPrgrmR'					=>	$expecClass_updatedClassPrgrmMetaGR,
+			'expecClass_updatedClassPrgrm_onePatR'			=>	$expecClass_updatedClassPrgrm_onePatMetaGR,
+			'expecClass_updatedClassPrgrm_oneSamplR'		=> 	$expecClass_updatedClassPrgrm_oneSamplMetaGR,
+			'err_noClass'									=>	'^((WARNING: ERROR: No results for directory pattern .* and file pattern ->\.\*calc\\\.LIN\\\.txt\.\*<- at .* line \d+\.)\s+)+$'
+		},
+		'Kraken2'	=>	{
+			'expecClassR'									=>	$expecClassKraken2R,
+			'expecClass_onePatR'							=>	$expecClass_onePatKraken2R,
+			'expecClass_oneSamplR'							=>	$expecClass_oneSamplKraken2R,
+			'expecClass_oneSampl_updatedR'					=>	$expecClass_oneSampl_updatedKraken2R,
+			'expecClass_onePat_updatedR'					=>	$expecClass_onePat_updatedKraken2R,
+			'expecClass_updatedR'							=>	$expecClass_updatedKraken2R,
+			'expecClass_updatedClassDb_oneSamplR'			=>	$expecClass_updatedClassDb_oneSamplKraken2R,
+			'expecClass_updatedClassDb_onePatR'				=> 	$expecClass_updatedClassDb_onePatKraken2R,
+			'expecClass_updatedClassDbR'					=>	$expecClass_updatedClassDbKraken2R,
+			'expecClass_updatedClassPrgrmR'					=>	$expecClass_updatedClassPrgrmKraken2R,
+			'expecClass_updatedClassPrgrm_onePatR'			=>	$expecClass_updatedClassPrgrm_onePatKraken2R,
+			'expecClass_updatedClassPrgrm_oneSamplR'		=> 	$expecClass_updatedClassPrgrm_oneSamplKraken2R,
+			'err_noClass'									=>	'^((WARNING: ERROR: No results for directory pattern .* and file pattern ->\.\*kraken2\.\*<- at .* line \d+\.)\s+)+$'
+		}
+	);
+	
 	my $testF_noRunBar = "./data/spreadsheets/test_SGA_noRunBar.xlsx";
-	my $testF_seq = "./data/spreadsheets/test_SGA.xlsx";
-	my $testF_seq_onePat = "./data/spreadsheets/test_SGA_onePat.xlsx";
-	my $testF_seq_oneSampl = "./data/spreadsheets/test_SGA_oneSampl.xlsx";
-	my $testF_updClassDb = "./data/spreadsheets/test_SGA_updatedClassDb.xlsx";
-	my $testF_updClassDb_onePat = "./data/spreadsheets/test_SGA_updatedClassDb_onePat.xlsx";
-	my $testF_updClassDb_oneSampl = "./data/spreadsheets/test_SGA_updatedClassDb_oneSampl.xlsx";
-	my $testF_updClassPrgrm = "./data/spreadsheets/test_SGA_updatedClassPrgrm.xlsx";
-	my $testF_updClassPrgrm_onePat = "./data/spreadsheets/test_SGA_updatedClassPrgrm_onePat.xlsx";
-	my $testF_updClassPrgrm_oneSampl = "./data/spreadsheets/test_SGA_updatedClassPrgrm_oneSampl.xlsx";
-
+	
+	# Files where different versions are required for each classifier
+	# classifier name path
+	my %files = (
+		"MetaG" => {
+			'testF_seq'						=>	'./data/spreadsheets/test_SGA_MetaG.xlsx',
+			'testF_seq_onePat'				=>	'./data/spreadsheets/test_SGA_onePat_MetaG.xlsx',
+			'testF_seq_oneSampl'			=>	'./data/spreadsheets/test_SGA_oneSampl_MetaG.xlsx',
+			'testF_updClassDb'				=>	'./data/spreadsheets/test_SGA_updatedClassDb_MetaG.xlsx',
+			'testF_updClassDb_onePat'		=>	'./data/spreadsheets/test_SGA_updatedClassDb_onePat_MetaG.xlsx',
+			'testF_updClassDb_oneSampl'		=>	'./data/spreadsheets/test_SGA_updatedClassDb_oneSampl_MetaG.xlsx',
+			'testF_updClassPrgrm'			=>	'./data/spreadsheets/test_SGA_updatedClassPrgrm_MetaG.xlsx',
+			'testF_updClassPrgrm_onePat'	=>	'./data/spreadsheets/test_SGA_updatedClassPrgrm_onePat_MetaG.xlsx',
+			'testF_updClassPrgrm_oneSampl'	=>	'./data/spreadsheets/test_SGA_updatedClassPrgrm_oneSampl_MetaG.xlsx'
+		},
+		"Kraken2" => {
+			'testF_seq'						=>	'./data/spreadsheets/test_SGA_Kraken2.xlsx',
+			'testF_seq_onePat'				=>	'./data/spreadsheets/test_SGA_onePat_Kraken2.xlsx',
+			'testF_seq_oneSampl'			=>	'./data/spreadsheets/test_SGA_oneSampl_Kraken2.xlsx',
+			'testF_updClassDb'				=>	'./data/spreadsheets/test_SGA_updatedClassDb_Kraken2.xlsx',
+			'testF_updClassDb_onePat'		=>	'./data/spreadsheets/test_SGA_updatedClassDb_onePat_Kraken2.xlsx',
+			'testF_updClassDb_oneSampl'		=>	'./data/spreadsheets/test_SGA_updatedClassDb_oneSampl_Kraken2.xlsx',
+			'testF_updClassPrgrm'			=>	'./data/spreadsheets/test_SGA_updatedClassPrgrm_Kraken2.xlsx',
+			'testF_updClassPrgrm_onePat'	=>	'./data/spreadsheets/test_SGA_updatedClassPrgrm_onePat_Kraken2.xlsx',
+			'testF_updClassPrgrm_oneSampl'	=>	'./data/spreadsheets/test_SGA_updatedClassPrgrm_oneSampl_Kraken2.xlsx'
+		}
+	);
+	
 	
 	#------------------------------------------------------------------------------#
 	# Classifications not found, although run and barcode are provided in Excel
@@ -13779,79 +13996,82 @@ sub test_class {
 	#------------------------------------------------------------------------------#
 	my $basePath_mod = $basePath . "/seq";
 	
-	try {
-		$err = "";
-		$resR = "";
-		$resDerivedR = "";
-		$resSeqR = "";
-		$resClassR = "";
-		$resChangeR = "";
-					
-		$err = qx{perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath_mod \\
-			--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
-			--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
+	foreach my $classifier (@classifiers) {
+		try {
+			$err = "";
+			$resR = "";
+			$resDerivedR = "";
+			$resSeqR = "";
+			$resClassR = "";
+			$resChangeR = "";
+
+			$err = qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $files{$classifier}->{'testF_seq'} \\
+					--data $basePath_mod --format xlsx --taxonomy $taxP \\
+					--whogirls ./data/spreadsheets/whogirls.xlsx --whoboys ./data/spreadsheets/whoboys.xlsx \\
+					2>&1 1>/dev/null
+			};
+			$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
+				"s.createdby, s.iscontrol, m.value, t.name, t.type, t.selection from patient p full " .
+				"outer join sample s on p.id = s.id_patient full outer join measurement m on s.id = m.id_sample " .
+				"full outer join type t on m.id_type = t.id order by accession asc, createdate asc, iscontrol asc, name asc"
+			);
+			$resDerivedR = $dbh->selectall_arrayref("select accession, createdate, timepoint, name, type, value " .
+				"from v_measurements where name in (?, ?, ?, ?, ?, ?, ?, ?) order by accession asc, createdate asc, name asc", {},
+				(
+					'z-score',
+					'z-score category',
+					'z-score subcategory',
+					'category of difference in body mass at delivery',
+					'difference in body mass at delivery',
+					'mother\'s age at delivery',
+					'mother\'s pre-pregnancy BMI',
+					'mother\'s pre-pregnancy BMI category'
+				)	
+			);
+			$resSeqR = $dbh->selectall_arrayref(
+				"select p.alias, p.accession, p.birthdate, s.createdate, case when s.iscontrol = '0' then 'f' when s.iscontrol = '1' then 't' end, " .
+					"seq.readid, seq.runid, seq.barcode, seq.flowcellid, seq.callermodel, seq.nucs, seq.quality, seq.seqerr, seq.seqlen " .
+					"from sequence seq left outer join sample s on s.id = seq.id_sample left outer join patient p on p.id = s.id_patient " .
+					"order by seq.readid asc, p.alias asc"
+			);
+			$resClassR = $dbh->selectall_arrayref("select seq.runid, seq.barcode, seq.readid, c.program, c.database, t.name, t.rank " .
+				"from sequence seq inner join classification c on c.id_sequence = seq.id left outer join taxclass tc on " . 
+				"tc.id_classification = c.id left outer join taxonomy t on t.id = tc.id_taxonomy order by seq.readid asc, " .
+				"c.program asc, c.database asc, " .
+				"array_position(array['domain', 'phylum', 'class', 'subclass', 'order', 'suborder', 'family', 'genus', 'species', 'strain'], t.rank) asc, " . 
+				"t.name asc");
+			$resChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
+				"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
+				"on s.id = m.id_sample full outer join type t on m.id_type = t.id full outer join sequence seq " .
+				"on s.id = seq.id_sample full outer join classification c on c.id_sequence = seq.id full outer join taxclass tc on " .
+				"tc.id_classification = c.id full outer join taxonomy tax on tax.id = tc.id_taxonomy group by p.id_change, s.id_change, " .
+				"m.id_change, t.id_change, seq.id_change, c.id_change, tc.id_change, tax.id_change order by p.id_change asc, s.id_change asc, " .
+				"m.id_change asc, t.id_change asc, seq.id_change, c.id_change, tc.id_change, tax.id_change asc"
+			);
+			
+			# Cleanup
+			$dbh = dropDB($dbh, $schema);
+			$dbh = createDB($dbh, $schema);
+		}
+		catch {
+			$err .= $_;
+			print $err;
+			ok(1==2, 'Testing classifications not found with ->' .  $classifier . '<-');
+		}
+		finally {
+			# ERROR string only contains WARNINGS about missing classification files
+			ok ($err =~ qr/$expecs{$classifier}->{'err_noClass'}/, 'Testing classifications not found with ->' .  $classifier . '<- - error msg');
+			# The rest of the data is inserted, as requested
+			is ($resChangeR, [[1, 1, 1, 1, 1, undef, undef, undef], [1, 1, 1, 1, undef, undef, undef, undef],
+				[1, 1, undef, undef, 1, undef, undef, undef], [1, 1, undef, undef, undef, undef, undef, undef]],
+				'Testing classifications not found with ->' .  $classifier . '<- - new data inserted?');
+			is ($resR, $expecMeasureR, 'Testing classifications not found with ->' .  $classifier . '<- - measurements');
+			is ($resDerivedR, $expecDerivedR, 'Testing classifications not found with ->' .  $classifier . '<- - derived measurements');
+			is ($resSeqR, $expecSeqR, 'Testing classifications not found with ->' .  $classifier . '<- - sequences');
+			is ($resClassR, [], 'Testing classifications not found with ->' .  $classifier . '<- - classifications');
 		};
-		$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
-			"s.createdby, s.iscontrol, m.value, t.name, t.type, t.selection from patient p full " .
-			"outer join sample s on p.id = s.id_patient full outer join measurement m on s.id = m.id_sample " .
-			"full outer join type t on m.id_type = t.id order by accession asc, createdate asc, iscontrol asc, name asc"
-		);
-		$resDerivedR = $dbh->selectall_arrayref("select accession, createdate, timepoint, name, type, value " .
-			"from v_measurements where name in (?, ?, ?, ?, ?, ?, ?, ?) order by accession asc, createdate asc, name asc", {},
-			(
-				'z-score',
-				'z-score category',
-				'z-score subcategory',
-				'category of difference in body mass at delivery',
-				'difference in body mass at delivery',
-				'mother\'s age at delivery',
-				'mother\'s pre-pregnancy BMI',
-				'mother\'s pre-pregnancy BMI category'
-			)	
-		);
-		$resSeqR = $dbh->selectall_arrayref(
-			"select p.alias, p.accession, p.birthdate, s.createdate, case when s.iscontrol = '0' then 'f' when s.iscontrol = '1' then 't' end, " .
-				"seq.readid, seq.runid, seq.barcode, seq.flowcellid, seq.callermodel, seq.nucs, seq.quality, seq.seqerr, seq.seqlen " .
-				"from sequence seq left outer join sample s on s.id = seq.id_sample left outer join patient p on p.id = s.id_patient " .
-				"order by seq.readid asc, p.alias asc"
-		);
-		$resClassR = $dbh->selectall_arrayref("select seq.runid, seq.barcode, seq.readid, c.program, c.database, t.name, t.rank " .
-			"from sequence seq inner join classification c on c.id_sequence = seq.id left outer join taxclass tc on " . 
-			"tc.id_classification = c.id left outer join taxonomy t on t.id = tc.id_taxonomy order by seq.readid asc, " .
-			"c.program asc, c.database asc, " .
-			"array_position(array['domain', 'phylum', 'class', 'subclass', 'order', 'suborder', 'family', 'genus', 'species', 'strain'], t.rank) asc, " . 
-			"t.name asc");
-		$resChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
-			"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
-			"on s.id = m.id_sample full outer join type t on m.id_type = t.id full outer join sequence seq " .
-			"on s.id = seq.id_sample full outer join classification c on c.id_sequence = seq.id full outer join taxclass tc on " .
-			"tc.id_classification = c.id full outer join taxonomy tax on tax.id = tc.id_taxonomy group by p.id_change, s.id_change, " .
-			"m.id_change, t.id_change, seq.id_change, c.id_change, tc.id_change, tax.id_change order by p.id_change asc, s.id_change asc, " .
-			"m.id_change asc, t.id_change asc, seq.id_change, c.id_change, tc.id_change, tax.id_change asc"
-		);
-		
-		# Cleanup
-		$dbh = dropDB($dbh, $schema);
-		$dbh = createDB($dbh, $schema);
 	}
-	catch {
-		$err .= $_;
-		print $err;
-		ok(1==2, 'Testing classifications not found');
-	}
-	finally {
-		# ERROR string only contains WARNINGS about missing classification files
-		ok ($err =~ m/^((WARNING: ERROR: No results for directory pattern .* and file pattern ->\.\*calc\\\.LIN\\\.txt\.\*<- at .* line \d+\.)\s+)+$/,
-			'Testing classifications not found - error msg');
-		# The rest of the data is inserted, as requested
-		is ($resChangeR, [[1, 1, 1, 1, 1, undef, undef, undef], [1, 1, 1, 1, undef, undef, undef, undef],
-			[1, 1, undef, undef, 1, undef, undef, undef], [1, 1, undef, undef, undef, undef, undef, undef]],
-			'Testing classifications not found - new data inserted?');
-		is ($resR, $expecMeasureR, 'Testing classifications not found - measurements');
-		is ($resDerivedR, $expecDerivedR, 'Testing classifications not found - derived measurements');
-		is ($resSeqR, $expecSeqR, 'Testing classifications not found - sequences');
-		is ($resClassR, [], 'Testing classifications not found - classifications');
-	};
 	
 	
 	#------------------------------------------------------------------------------#
@@ -13864,78 +14084,82 @@ sub test_class {
 	#------------------------------------------------------------------------------#
 	$basePath_mod = $basePath . "/class";
 	
-	try {
-		$err = "";
-		$resR = "";
-		$resDerivedR = "";
-		$resSeqR = "";
-		$resClassR = "";
-		$resChangeR = "";
-					
-		$err = qx{perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath_mod \\
-			--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
-			--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
+	foreach my $classifier (@classifiers) {
+		try {
+			$err = "";
+			$resR = "";
+			$resDerivedR = "";
+			$resSeqR = "";
+			$resClassR = "";
+			$resChangeR = "";
+						
+			$err = qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $files{$classifier}->{'testF_seq'} \\
+					--data $basePath_mod --format xlsx --taxonomy $taxP \\
+					--whogirls ./data/spreadsheets/whogirls.xlsx --whoboys ./data/spreadsheets/whoboys.xlsx \\
+					2>&1 1>/dev/null
+			};
+			$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
+				"s.createdby, s.iscontrol, m.value, t.name, t.type, t.selection from patient p full " .
+				"outer join sample s on p.id = s.id_patient full outer join measurement m on s.id = m.id_sample " .
+				"full outer join type t on m.id_type = t.id order by accession asc, createdate asc, iscontrol asc, name asc"
+			);
+			$resDerivedR = $dbh->selectall_arrayref("select accession, createdate, timepoint, name, type, value " .
+				"from v_measurements where name in (?, ?, ?, ?, ?, ?, ?, ?) order by accession asc, createdate asc, name asc", {},
+				(
+					'z-score',
+					'z-score category',
+					'z-score subcategory',
+					'category of difference in body mass at delivery',
+					'difference in body mass at delivery',
+					'mother\'s age at delivery',
+					'mother\'s pre-pregnancy BMI',
+					'mother\'s pre-pregnancy BMI category'
+				)	
+			);
+			$resSeqR = $dbh->selectall_arrayref(
+				"select p.alias, p.accession, p.birthdate, s.createdate, case when s.iscontrol = '0' then 'f' when s.iscontrol = '1' then 't' end, " .
+					"seq.readid, seq.runid, seq.barcode, seq.flowcellid, seq.callermodel, seq.nucs, seq.quality, seq.seqerr, seq.seqlen " .
+					"from sequence seq left outer join sample s on s.id = seq.id_sample left outer join patient p on p.id = s.id_patient " .
+					"order by seq.readid asc, p.alias asc"
+			);
+			$resClassR = $dbh->selectall_arrayref("select seq.runid, seq.barcode, seq.readid, c.program, c.database, t.name, t.rank " .
+				"from sequence seq inner join classification c on c.id_sequence = seq.id left outer join taxclass tc on " . 
+				"tc.id_classification = c.id left outer join taxonomy t on t.id = tc.id_taxonomy order by seq.readid asc, " .
+				"c.program asc, c.database asc, " .
+				"array_position(array['domain', 'phylum', 'class', 'subclass', 'order', 'suborder', 'family', 'genus', 'species', 'strain'], t.rank) asc, " . 
+				"t.name asc");
+			$resChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
+				"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
+				"on s.id = m.id_sample full outer join type t on m.id_type = t.id full outer join sequence seq " .
+				"on s.id = seq.id_sample full outer join classification c on c.id_sequence = seq.id full outer join taxclass tc on " .
+				"tc.id_classification = c.id full outer join taxonomy tax on tax.id = tc.id_taxonomy group by p.id_change, s.id_change, " .
+				"m.id_change, t.id_change, seq.id_change, c.id_change, tc.id_change, tax.id_change order by p.id_change asc, s.id_change asc, " .
+				"m.id_change asc, t.id_change asc, seq.id_change, c.id_change, tc.id_change, tax.id_change asc"
+			);
+			
+			# Cleanup
+			$dbh = dropDB($dbh, $schema);
+			$dbh = createDB($dbh, $schema);
+		}
+		catch {
+			$err .= $_;
+			print $err;
+			ok(1==2, 'Testing insert classifications without sequences with ->' .  $classifier . '<-');
+		}
+		finally {
+			# ERROR string only contains WARNINGS about missing sequence files
+			ok ($err =~ m/^((WARNING: ERROR: No results for directory pattern .* and file pattern ->\\\.fastq\.\*<- at .* line \d+\.)\s+)+$/,
+				'Testing insert classifications without sequences with ->' .  $classifier . '<- - error msg');
+			# Except sequences and classifications, the rest of the data is inserted, as requested
+			is ($resChangeR, [[1, 1, 1, 1, undef, undef, undef, undef], [1, 1, undef, undef, undef, undef, undef, undef]],
+				'Testing insert classifications without sequences with ->' .  $classifier . '<- - new data inserted?');
+			is ($resR, $expecMeasureR, 'Testing insert classifications without sequences with ->' .  $classifier . '<- - measurements');
+			is ($resDerivedR, $expecDerivedR, 'Testing insert classifications without sequences with ->' .  $classifier . '<- - derived measurements');
+			is ($resSeqR, [], 'Testing insert classifications without sequences with ->' .  $classifier . '<- - sequences');
+			is ($resClassR, [], 'Testing insert classifications without sequences with ->' .  $classifier . '<- - classifications');
 		};
-		$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
-			"s.createdby, s.iscontrol, m.value, t.name, t.type, t.selection from patient p full " .
-			"outer join sample s on p.id = s.id_patient full outer join measurement m on s.id = m.id_sample " .
-			"full outer join type t on m.id_type = t.id order by accession asc, createdate asc, iscontrol asc, name asc"
-		);
-		$resDerivedR = $dbh->selectall_arrayref("select accession, createdate, timepoint, name, type, value " .
-			"from v_measurements where name in (?, ?, ?, ?, ?, ?, ?, ?) order by accession asc, createdate asc, name asc", {},
-			(
-				'z-score',
-				'z-score category',
-				'z-score subcategory',
-				'category of difference in body mass at delivery',
-				'difference in body mass at delivery',
-				'mother\'s age at delivery',
-				'mother\'s pre-pregnancy BMI',
-				'mother\'s pre-pregnancy BMI category'
-			)	
-		);
-		$resSeqR = $dbh->selectall_arrayref(
-			"select p.alias, p.accession, p.birthdate, s.createdate, case when s.iscontrol = '0' then 'f' when s.iscontrol = '1' then 't' end, " .
-				"seq.readid, seq.runid, seq.barcode, seq.flowcellid, seq.callermodel, seq.nucs, seq.quality, seq.seqerr, seq.seqlen " .
-				"from sequence seq left outer join sample s on s.id = seq.id_sample left outer join patient p on p.id = s.id_patient " .
-				"order by seq.readid asc, p.alias asc"
-		);
-		$resClassR = $dbh->selectall_arrayref("select seq.runid, seq.barcode, seq.readid, c.program, c.database, t.name, t.rank " .
-			"from sequence seq inner join classification c on c.id_sequence = seq.id left outer join taxclass tc on " . 
-			"tc.id_classification = c.id left outer join taxonomy t on t.id = tc.id_taxonomy order by seq.readid asc, " .
-			"c.program asc, c.database asc, " .
-			"array_position(array['domain', 'phylum', 'class', 'subclass', 'order', 'suborder', 'family', 'genus', 'species', 'strain'], t.rank) asc, " . 
-			"t.name asc");
-		$resChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
-			"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
-			"on s.id = m.id_sample full outer join type t on m.id_type = t.id full outer join sequence seq " .
-			"on s.id = seq.id_sample full outer join classification c on c.id_sequence = seq.id full outer join taxclass tc on " .
-			"tc.id_classification = c.id full outer join taxonomy tax on tax.id = tc.id_taxonomy group by p.id_change, s.id_change, " .
-			"m.id_change, t.id_change, seq.id_change, c.id_change, tc.id_change, tax.id_change order by p.id_change asc, s.id_change asc, " .
-			"m.id_change asc, t.id_change asc, seq.id_change, c.id_change, tc.id_change, tax.id_change asc"
-		);
-		
-		# Cleanup
-		$dbh = dropDB($dbh, $schema);
-		$dbh = createDB($dbh, $schema);
 	}
-	catch {
-		$err .= $_;
-		print $err;
-		ok(1==2, 'Testing insert classifications without sequences');
-	}
-	finally {
-		# ERROR string only contains WARNINGS about missing sequence files
-		ok ($err =~ m/^((WARNING: ERROR: No results for directory pattern .* and file pattern ->\\\.fastq\.\*<- at .* line \d+\.)\s+)+$/,
-			'Testing insert classifications without sequences - error msg');
-		# Except sequences and classifications, the rest of the data is inserted, as requested
-		is ($resChangeR, [[1, 1, 1, 1, undef, undef, undef, undef], [1, 1, undef, undef, undef, undef, undef, undef]],
-			'Testing insert classifications without sequences - new data inserted?');
-		is ($resR, $expecMeasureR, 'Testing insert classifications without sequences - measurements');
-		is ($resDerivedR, $expecDerivedR, 'Testing insert classifications without sequences - derived measurements');
-		is ($resSeqR, [], 'Testing insert classifications without sequences - sequences');
-		is ($resClassR, [], 'Testing insert classifications without sequences - classifications');
-	};
 	
 	
 	#------------------------------------------------------------------------------#
@@ -13944,74 +14168,78 @@ sub test_class {
 	#------------------------------------------------------------------------------#
 	$basePath_mod = $basePath =~ s/org$/err/r;
 	
-	try {
-		$err = "";
-		$resR = "";
-		$resDerivedR = "";
-		$resSeqR = "";
-		$resClassR = "";
-		$resChangeR = "";
-					
-		$err = qx{perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath_mod \\
-			--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
-			--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
+	foreach my $classifier (@classifiers) {
+		try {
+			$err = "";
+			$resR = "";
+			$resDerivedR = "";
+			$resSeqR = "";
+			$resClassR = "";
+			$resChangeR = "";
+						
+			$err = qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $files{$classifier}->{'testF_seq'} \\
+					--data $basePath_mod --format xlsx --taxonomy $taxP \\
+					--whogirls ./data/spreadsheets/whogirls.xlsx --whoboys ./data/spreadsheets/whoboys.xlsx \\
+					2>&1 1>/dev/null \\
+			};
+			$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
+				"s.createdby, s.iscontrol, m.value, t.name, t.type, t.selection from patient p full " .
+				"outer join sample s on p.id = s.id_patient full outer join measurement m on s.id = m.id_sample " .
+				"full outer join type t on m.id_type = t.id order by accession asc, createdate asc, iscontrol asc, name asc"
+			);
+			$resDerivedR = $dbh->selectall_arrayref("select accession, createdate, timepoint, name, type, value " .
+				"from v_measurements where name in (?, ?, ?, ?, ?, ?, ?, ?) order by accession asc, createdate asc, name asc", {},
+				(
+					'z-score',
+					'z-score category',
+					'z-score subcategory',
+					'category of difference in body mass at delivery',
+					'difference in body mass at delivery',
+					'mother\'s age at delivery',
+					'mother\'s pre-pregnancy BMI',
+					'mother\'s pre-pregnancy BMI category'
+				)	
+			);
+			$resSeqR = $dbh->selectall_arrayref(
+				"select p.alias, p.accession, p.birthdate, s.createdate, case when s.iscontrol = '0' then 'f' when s.iscontrol = '1' then 't' end, " .
+					"seq.readid, seq.runid, seq.barcode, seq.flowcellid, seq.callermodel, seq.nucs, seq.quality, seq.seqerr, seq.seqlen " .
+					"from sequence seq left outer join sample s on s.id = seq.id_sample left outer join patient p on p.id = s.id_patient " .
+					"order by seq.readid asc, p.alias asc"
+			);
+			$resClassR = $dbh->selectall_arrayref("select seq.runid, seq.barcode, seq.readid, c.program, c.database, t.name, t.rank " .
+				"from sequence seq inner join classification c on c.id_sequence = seq.id left outer join taxclass tc on " . 
+				"tc.id_classification = c.id left outer join taxonomy t on t.id = tc.id_taxonomy order by seq.readid asc, " .
+				"c.program asc, c.database asc, " .
+				"array_position(array['domain', 'phylum', 'class', 'subclass', 'order', 'suborder', 'family', 'genus', 'species', 'strain'], t.rank) asc, " . 
+				"t.name asc");
+			$resChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
+				"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
+				"on s.id = m.id_sample full outer join type t on m.id_type = t.id full outer join sequence seq " .
+				"on s.id = seq.id_sample full outer join classification c on c.id_sequence = seq.id full outer join taxclass tc on " .
+				"tc.id_classification = c.id full outer join taxonomy tax on tax.id = tc.id_taxonomy group by p.id_change, s.id_change, " .
+				"m.id_change, t.id_change, seq.id_change, c.id_change, tc.id_change, tax.id_change order by p.id_change asc, s.id_change asc, " .
+				"m.id_change asc, t.id_change asc, seq.id_change, c.id_change, tc.id_change, tax.id_change asc"
+			);
+			
+			# Cleanup
+			$dbh = dropDB($dbh, $schema);
+			$dbh = createDB($dbh, $schema);
+		}
+		catch {
+			$err .= $_;
+			print $err;
+			ok(1==2, 'Testing classifications and sequences do not match with ->' .  $classifier . '<-');
+		}
+		finally {
+			ok ($err =~ m/^ERROR.* read ID.* do not match/, 'Testing classifications and sequences do not match with ->' .  $classifier . '<- - error msg');
+			is ($resChangeR, [], 'Testing classifications and sequences do not match with ->' .  $classifier . '<- - new data inserted?');
+			is ($resR, [], 'Testing classifications and sequences do not match with ->' .  $classifier . '<- - measurements');
+			is ($resDerivedR, [], 'Testing classifications and sequences do not match with ->' .  $classifier . '<- - derived measurements');
+			is ($resSeqR, [], 'Testing classifications and sequences do not match with ->' .  $classifier . '<- - sequences');
+			is ($resClassR, [], 'Testing classifications and sequences do not match with ->' .  $classifier . '<- - classifications');
 		};
-		$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
-			"s.createdby, s.iscontrol, m.value, t.name, t.type, t.selection from patient p full " .
-			"outer join sample s on p.id = s.id_patient full outer join measurement m on s.id = m.id_sample " .
-			"full outer join type t on m.id_type = t.id order by accession asc, createdate asc, iscontrol asc, name asc"
-		);
-		$resDerivedR = $dbh->selectall_arrayref("select accession, createdate, timepoint, name, type, value " .
-			"from v_measurements where name in (?, ?, ?, ?, ?, ?, ?, ?) order by accession asc, createdate asc, name asc", {},
-			(
-				'z-score',
-				'z-score category',
-				'z-score subcategory',
-				'category of difference in body mass at delivery',
-				'difference in body mass at delivery',
-				'mother\'s age at delivery',
-				'mother\'s pre-pregnancy BMI',
-				'mother\'s pre-pregnancy BMI category'
-			)	
-		);
-		$resSeqR = $dbh->selectall_arrayref(
-			"select p.alias, p.accession, p.birthdate, s.createdate, case when s.iscontrol = '0' then 'f' when s.iscontrol = '1' then 't' end, " .
-				"seq.readid, seq.runid, seq.barcode, seq.flowcellid, seq.callermodel, seq.nucs, seq.quality, seq.seqerr, seq.seqlen " .
-				"from sequence seq left outer join sample s on s.id = seq.id_sample left outer join patient p on p.id = s.id_patient " .
-				"order by seq.readid asc, p.alias asc"
-		);
-		$resClassR = $dbh->selectall_arrayref("select seq.runid, seq.barcode, seq.readid, c.program, c.database, t.name, t.rank " .
-			"from sequence seq inner join classification c on c.id_sequence = seq.id left outer join taxclass tc on " . 
-			"tc.id_classification = c.id left outer join taxonomy t on t.id = tc.id_taxonomy order by seq.readid asc, " .
-			"c.program asc, c.database asc, " .
-			"array_position(array['domain', 'phylum', 'class', 'subclass', 'order', 'suborder', 'family', 'genus', 'species', 'strain'], t.rank) asc, " . 
-			"t.name asc");
-		$resChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
-			"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
-			"on s.id = m.id_sample full outer join type t on m.id_type = t.id full outer join sequence seq " .
-			"on s.id = seq.id_sample full outer join classification c on c.id_sequence = seq.id full outer join taxclass tc on " .
-			"tc.id_classification = c.id full outer join taxonomy tax on tax.id = tc.id_taxonomy group by p.id_change, s.id_change, " .
-			"m.id_change, t.id_change, seq.id_change, c.id_change, tc.id_change, tax.id_change order by p.id_change asc, s.id_change asc, " .
-			"m.id_change asc, t.id_change asc, seq.id_change, c.id_change, tc.id_change, tax.id_change asc"
-		);
-		
-		# Cleanup
-		$dbh = dropDB($dbh, $schema);
-		$dbh = createDB($dbh, $schema);
 	}
-	catch {
-		$err .= $_;
-		print $err;
-		ok(1==2, 'Testing classifications and sequences do not match');
-	}
-	finally {
-		ok ($err =~ m/^ERROR.* read ID.* do not match/, 'Testing classifications and sequences do not match - error msg');
-		is ($resChangeR, [], 'Testing classifications and sequences do not match - new data inserted?');
-		is ($resR, [], 'Testing classifications and sequences do not match - measurements');
-		is ($resDerivedR, [], 'Testing classifications and sequences do not match - derived measurements');
-		is ($resSeqR, [], 'Testing classifications and sequences do not match - sequences');
-		is ($resClassR, [], 'Testing classifications and sequences do not match - classifications');
-	};
 	
 	
 	#------------------------------------------------------------------------------#
@@ -14027,6 +14255,86 @@ sub test_class {
 		[1, 1, undef, undef, undef, undef, undef, undef] # control sample without measurement/type/sequences/classifications/taxclass/taxonomy
 	];
 	
+	foreach my $classifier (@classifiers) {
+		try {
+			$err = "";
+			$resR = "";
+			$resDerivedR = "";
+			$resSeqR = "";
+			$resClassR = "";
+			$resChangeR = "";
+						
+			$err = qx{export PERL5LIB="$lib"; \\
+				perl ../importSGA.pl --debug --verbose --table $files{$classifier}->{'testF_seq'} \\
+					--data $basePath --format xlsx --taxonomy $taxP \\
+					--whogirls ./data/spreadsheets/whogirls.xlsx --whoboys ./data/spreadsheets/whoboys.xlsx \\
+					2>&1 1>/dev/null
+			};
+			$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
+				"s.createdby, s.iscontrol, m.value, t.name, t.type, t.selection from patient p full " .
+				"outer join sample s on p.id = s.id_patient full outer join measurement m on s.id = m.id_sample " .
+				"full outer join type t on m.id_type = t.id order by accession asc, createdate asc, iscontrol asc, name asc"
+			);
+			$resDerivedR = $dbh->selectall_arrayref("select accession, createdate, timepoint, name, type, value " .
+				"from v_measurements where name in (?, ?, ?, ?, ?, ?, ?, ?) order by accession asc, createdate asc, name asc", {},
+				(
+					'z-score',
+					'z-score category',
+					'z-score subcategory',
+					'category of difference in body mass at delivery',
+					'difference in body mass at delivery',
+					'mother\'s age at delivery',
+					'mother\'s pre-pregnancy BMI',
+					'mother\'s pre-pregnancy BMI category'
+				)	
+			);
+			$resSeqR = $dbh->selectall_arrayref(
+				"select p.alias, p.accession, p.birthdate, s.createdate, case when s.iscontrol = '0' then 'f' when s.iscontrol = '1' then 't' end, " .
+					"seq.readid, seq.runid, seq.barcode, seq.flowcellid, seq.callermodel, seq.nucs, seq.quality, seq.seqerr, seq.seqlen " .
+					"from sequence seq left outer join sample s on s.id = seq.id_sample left outer join patient p on p.id = s.id_patient " .
+					"order by seq.readid asc, p.alias asc"
+			);
+			$resClassR = $dbh->selectall_arrayref("select seq.runid, seq.barcode, seq.readid, c.program, c.database, t.name, t.rank " .
+				"from sequence seq inner join classification c on c.id_sequence = seq.id left outer join taxclass tc on " . 
+				"tc.id_classification = c.id left outer join taxonomy t on t.id = tc.id_taxonomy order by seq.readid asc, " .
+				"c.program asc, c.database asc, " .
+				"array_position(array['domain', 'phylum', 'class', 'subclass', 'order', 'suborder', 'family', 'genus', 'species', 'strain'], t.rank) asc, " . 
+				"t.name asc");
+			$resChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
+				"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
+				"on s.id = m.id_sample full outer join type t on m.id_type = t.id full outer join sequence seq " .
+				"on s.id = seq.id_sample full outer join classification c on c.id_sequence = seq.id full outer join taxclass tc on " .
+				"tc.id_classification = c.id full outer join taxonomy tax on tax.id = tc.id_taxonomy group by p.id_change, s.id_change, " .
+				"m.id_change, t.id_change, seq.id_change, c.id_change, tc.id_change, tax.id_change order by p.id_change asc, s.id_change asc, " .
+				"m.id_change asc, t.id_change asc, seq.id_change, c.id_change, tc.id_change, tax.id_change asc"
+			);
+			
+			# Cleanup
+			$dbh = dropDB($dbh, $schema);
+			$dbh = createDB($dbh, $schema);
+		}
+		catch {
+			$err .= $_;
+			print $err;
+			ok(1==2, 'Testing valid full insert with ->' . $classifier . '<-');
+		}
+		finally {
+			is ($err, '', 'Testing valid full insert with ->' . $classifier . '<- - error msg');
+			is ($resChangeR, $expecChange_modR,	'Testing valid full insert with ->' . $classifier . '<- - new data inserted?');
+			is ($resR, $expecMeasureR, 'Testing valid full insert with ->' . $classifier . '<- - measurements');
+			is ($resDerivedR, $expecDerivedR, 'Testing valid full insert with ->' . $classifier . '<- - derived measurements');
+			is ($resSeqR, $expecSeqR, 'Testing valid full insert with ->' . $classifier . '<- - sequences');
+			is ($resClassR, $expecs{$classifier}->{'expecClassR'}, 'Testing valid full insert with ->' . $classifier . '<- - classifications');
+		};
+	}
+
+	
+	#------------------------------------------------------------------------------#
+	# Taxonomy path not needed for MetaG (valid full insert)
+	# => Insert data from Excel
+	# => Insert sequences
+	# => Insert classifications
+	#------------------------------------------------------------------------------#	
 	try {
 		$err = "";
 		$resR = "";
@@ -14035,9 +14343,11 @@ sub test_class {
 		$resClassR = "";
 		$resChangeR = "";
 					
-		$err = qx{perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath \\
-			--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
-			--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
+		$err = qx{export PERL5LIB="$lib"; \\
+			perl ../importSGA.pl --debug --verbose --table $files{'MetaG'}->{'testF_seq'} \\
+				--data $basePath --format xlsx \\
+				--whogirls ./data/spreadsheets/whogirls.xlsx --whoboys ./data/spreadsheets/whoboys.xlsx \\
+				2>&1 1>/dev/null
 		};
 		$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
 			"s.createdby, s.iscontrol, m.value, t.name, t.type, t.selection from patient p full " .
@@ -14085,15 +14395,88 @@ sub test_class {
 	catch {
 		$err .= $_;
 		print $err;
-		ok(1==2, 'Testing valid full insert');
+		ok(1==2, 'Testing taxonomy path not needed for MetaG');
 	}
 	finally {
-		is ($err, '', 'Testing valid full insert - error msg');
-		is ($resChangeR, $expecChange_modR,	'Testing valid full insert - new data inserted?');
-		is ($resR, $expecMeasureR, 'Testing valid full insert - measurements');
-		is ($resDerivedR, $expecDerivedR, 'Testing valid full insert - derived measurements');
-		is ($resSeqR, $expecSeqR, 'Testing valid full insert - sequences');
-		is ($resClassR, $expecClassR, 'Testing valid full insert - classifications');
+		is ($err, '', 'Testing taxonomy path not needed for MetaG - error msg');
+		is ($resChangeR, $expecChange_modR,	'Testing taxonomy path not needed for MetaG - new data inserted?');
+		is ($resR, $expecMeasureR, 'Testing taxonomy path not needed for MetaG - measurements');
+		is ($resDerivedR, $expecDerivedR, 'Testing taxonomy path not needed for MetaG - derived measurements');
+		is ($resSeqR, $expecSeqR, 'Testing taxonomy path not needed for MetaG - sequences');
+		is ($resClassR, $expecs{'MetaG'}->{'expecClassR'}, 'Testing taxonomy path not needed for MetaG - classifications');
+	};
+	
+	
+	#------------------------------------------------------------------------------#
+	# Taxonomy path required for Kraken2
+	#------------------------------------------------------------------------------#	
+	try {
+		$err = "";
+		$resR = "";
+		$resDerivedR = "";
+		$resSeqR = "";
+		$resClassR = "";
+		$resChangeR = "";
+					
+		$err = qx{export PERL5LIB="$lib"; \\
+			perl ../importSGA.pl --debug --verbose --table $files{'Kraken2'}->{'testF_seq'} \\
+				--data $basePath --format xlsx \\
+				--whogirls ./data/spreadsheets/whogirls.xlsx --whoboys ./data/spreadsheets/whoboys.xlsx \\
+				2>&1 1>/dev/null
+		};
+		$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
+			"s.createdby, s.iscontrol, m.value, t.name, t.type, t.selection from patient p full " .
+			"outer join sample s on p.id = s.id_patient full outer join measurement m on s.id = m.id_sample " .
+			"full outer join type t on m.id_type = t.id order by accession asc, createdate asc, iscontrol asc, name asc"
+		);
+		$resDerivedR = $dbh->selectall_arrayref("select accession, createdate, timepoint, name, type, value " .
+			"from v_measurements where name in (?, ?, ?, ?, ?, ?, ?, ?) order by accession asc, createdate asc, name asc", {},
+			(
+				'z-score',
+				'z-score category',
+				'z-score subcategory',
+				'category of difference in body mass at delivery',
+				'difference in body mass at delivery',
+				'mother\'s age at delivery',
+				'mother\'s pre-pregnancy BMI',
+				'mother\'s pre-pregnancy BMI category'
+			)	
+		);
+		$resSeqR = $dbh->selectall_arrayref(
+			"select p.alias, p.accession, p.birthdate, s.createdate, case when s.iscontrol = '0' then 'f' when s.iscontrol = '1' then 't' end, " .
+				"seq.readid, seq.runid, seq.barcode, seq.flowcellid, seq.callermodel, seq.nucs, seq.quality, seq.seqerr, seq.seqlen " .
+				"from sequence seq left outer join sample s on s.id = seq.id_sample left outer join patient p on p.id = s.id_patient " .
+				"order by seq.readid asc, p.alias asc"
+		);
+		$resClassR = $dbh->selectall_arrayref("select seq.runid, seq.barcode, seq.readid, c.program, c.database, t.name, t.rank " .
+			"from sequence seq inner join classification c on c.id_sequence = seq.id left outer join taxclass tc on " . 
+			"tc.id_classification = c.id left outer join taxonomy t on t.id = tc.id_taxonomy order by seq.readid asc, " .
+			"c.program asc, c.database asc, " .
+			"array_position(array['domain', 'phylum', 'class', 'subclass', 'order', 'suborder', 'family', 'genus', 'species', 'strain'], t.rank) asc, " . 
+			"t.name asc");
+		$resChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
+			"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
+			"on s.id = m.id_sample full outer join type t on m.id_type = t.id full outer join sequence seq " .
+			"on s.id = seq.id_sample full outer join classification c on c.id_sequence = seq.id full outer join taxclass tc on " .
+			"tc.id_classification = c.id full outer join taxonomy tax on tax.id = tc.id_taxonomy group by p.id_change, s.id_change, " .
+			"m.id_change, t.id_change, seq.id_change, c.id_change, tc.id_change, tax.id_change order by p.id_change asc, s.id_change asc, " .
+			"m.id_change asc, t.id_change asc, seq.id_change, c.id_change, tc.id_change, tax.id_change asc"
+		);
+		
+		# Cleanup
+		$dbh = dropDB($dbh, $schema);
+		$dbh = createDB($dbh, $schema);
+	}
+	catch {
+		$err .= $_;
+	}
+	finally {
+		ok ($err =~ m/^ERROR.*Rolling back due to .*Taxonomy path required for/, 'Testing taxonomy path required for Kraken2 - error msg');
+		is ($resChangeR, [],	'Testing taxonomy path required for Kraken2 - new data inserted?');
+		is ($resR, [], 'Testing taxonomy path required for Kraken2 - measurements');
+		is ($resDerivedR, [], 'Testing taxonomy path required for Kraken2 - derived measurements');
+		is ($resSeqR, [], 'Testing taxonomy path required for Kraken2 - sequences');
+		is ($resClassR, [], 'Testing taxonomy path required for Kraken2 - classifications');
 	};
 
 
@@ -14110,107 +14493,113 @@ sub test_class {
 		[1, 1, undef, undef, 1, undef, undef, undef], # control sample with sequences, but without measurement/type/classifications/taxclass/taxonomy
 		[1, 1, undef, undef, undef, undef, undef, undef] # control sample without measurement/type/sequences/classifications/taxclass/taxonomy
 	];
-	my @runs = (
-		[$testF_seq, 'full file', $expecClassR, $expecChangeR],
-		[$testF_seq_onePat, 'one patient', $expecClass_onePatR, $expecChange_modR],
-		[$testF_seq_oneSampl, 'one sample', $expecClass_oneSamplR, $expecChange_modR],
-	);
 	$basePath_mod = $basePath . "/seq";
-	foreach my $run (@runs) {
-		my ($file, $name, $tmp_expecClassR, $tmp_expecChangeR) = @{$run};
+	
+	foreach my $classifier (@classifiers) {
+		my @runs = (
+			[$files{$classifier}->{'testF_seq'}, 'full file', $expecs{$classifier}->{'expecClassR'}, $expecChangeR],
+			[$files{$classifier}->{'testF_seq_onePat'}, 'one patient', $expecs{$classifier}->{'expecClass_onePatR'}, $expecChange_modR],
+			[$files{$classifier}->{'testF_seq_oneSampl'}, 'one sample', $expecs{$classifier}->{'expecClass_oneSamplR'}, $expecChange_modR],
+		);
+		foreach my $run (@runs) {
+			my ($file, $name, $tmp_expecClassR, $tmp_expecChangeR) = @{$run};
+				
 			
-		
-		#------------------------------------------------------------------------------#
-		# Always initialize with Excel containing run and barcode. basePath only
-		# contains sequences.
-		#------------------------------------------------------------------------------#
-		try {
-			$err = "";
+			#------------------------------------------------------------------------------#
+			# Always initialize with Excel containing run and barcode. basePath only
+			# contains sequences.
+			#------------------------------------------------------------------------------#
+			try {
+				$err = "";
+				
+				qx{export PERL5LIB="$lib"; \\
+					perl ../importSGA.pl --debug --verbose --table $files{$classifier}->{'testF_seq'} \\
+						--data $basePath_mod --taxonomy $taxP --format xlsx \\
+						--whogirls ./data/spreadsheets/whogirls.xlsx --whoboys ./data/spreadsheets/whoboys.xlsx \\
+						2>&1 1>/dev/null
+				};
+			}
+			catch {
+				$err = $_;
+				die "ERROR: $err"
+			};
 			
-			qx{perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath_mod \\
-				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
-				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
+			
+			#------------------------------------------------------------------------------#
+			# Add classification data
+			# => id_change indicates version of data --> should change
+			# => existing records should not have changed
+			#------------------------------------------------------------------------------#
+			try {
+				$err = "";
+				$resR = "";
+				$resDerivedR = "";
+				$resSeqR = "";
+				$resClassR = "";
+				$resChangeR = "";
+							
+				$err = qx{export PERL5LIB="$lib"; \\
+					perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
+						--taxonomy $taxP --format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
+						--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
+				};			
+				$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
+					"s.createdby, s.iscontrol, m.value, t.name, t.type, t.selection from patient p full " .
+					"outer join sample s on p.id = s.id_patient full outer join measurement m on s.id = m.id_sample " .
+					"full outer join type t on m.id_type = t.id order by accession asc, createdate asc, iscontrol asc, name asc"
+				);
+				$resDerivedR = $dbh->selectall_arrayref("select accession, createdate, timepoint, name, type, value " .
+					"from v_measurements where name in (?, ?, ?, ?, ?, ?, ?, ?) order by accession asc, createdate asc, name asc", {},
+					(
+						'z-score',
+						'z-score category',
+						'z-score subcategory',
+						'category of difference in body mass at delivery',
+						'difference in body mass at delivery',
+						'mother\'s age at delivery',
+						'mother\'s pre-pregnancy BMI',
+						'mother\'s pre-pregnancy BMI category'
+					)	
+				);
+				$resSeqR = $dbh->selectall_arrayref(
+					"select p.alias, p.accession, p.birthdate, s.createdate, case when s.iscontrol = '0' then 'f' when s.iscontrol = '1' then 't' end, " .
+						"seq.readid, seq.runid, seq.barcode, seq.flowcellid, seq.callermodel, seq.nucs, seq.quality, seq.seqerr, seq.seqlen " .
+						"from sequence seq left outer join sample s on s.id = seq.id_sample left outer join patient p on p.id = s.id_patient " .
+						"order by seq.readid asc, p.alias asc"
+				);
+				$resClassR = $dbh->selectall_arrayref("select seq.runid, seq.barcode, seq.readid, c.program, c.database, t.name, t.rank " .
+					"from sequence seq inner join classification c on c.id_sequence = seq.id left outer join taxclass tc on " . 
+					"tc.id_classification = c.id left outer join taxonomy t on t.id = tc.id_taxonomy order by seq.readid asc, " .
+					"c.program asc, c.database asc, " .
+					"array_position(array['domain', 'phylum', 'class', 'subclass', 'order', 'suborder', 'family', 'genus', 'species', 'strain'], t.rank) asc, " . 
+					"t.name asc");
+				$resChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
+					"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
+					"on s.id = m.id_sample full outer join type t on m.id_type = t.id full outer join sequence seq " .
+					"on s.id = seq.id_sample full outer join classification c on c.id_sequence = seq.id full outer join taxclass tc on " .
+					"tc.id_classification = c.id full outer join taxonomy tax on tax.id = tc.id_taxonomy group by p.id_change, s.id_change, " .
+					"m.id_change, t.id_change, seq.id_change, c.id_change, tc.id_change, tax.id_change order by p.id_change asc, s.id_change asc, " .
+					"m.id_change asc, t.id_change asc, seq.id_change, c.id_change, tc.id_change, tax.id_change asc"
+				);
+				
+				# Cleanup
+				$dbh = dropDB($dbh, $schema);
+				$dbh = createDB($dbh, $schema);
+			}
+			catch {
+				$err .= $_;
+				print $err;
+				ok (1==2, 'Testing to add classification data for ->' . $classifier . '<- with ->' . $name . '<-');
+			}
+			finally {
+				is ($err, "", 'Testing to add classification data for ->' . $classifier . '<- with ->' . $name . '<- - error msg');
+				is ($resChangeR, $tmp_expecChangeR, 'Testing to add classification data for ->' . $classifier . '<- with ->' . $name . '<- - updated?');
+				is ($resR, $expecMeasureR, 'Testing to add classification data for ->' . $classifier . '<- with ->' . $name . '<- - measurements');
+				is ($resDerivedR, $expecDerivedR, 'Testing to add classification data for ->' . $classifier . '<- with ->' . $name . '<- - derived measurements');
+				is ($resSeqR, $expecSeqR, 'Testing to add classification data for ->' . $classifier . '<- with ->' . $name . '<- - sequences');
+				is ($resClassR, $tmp_expecClassR, 'Testing to add classification data for ->' . $classifier . '<- with ->' . $name . '<- - classifications');
 			};
 		}
-		catch {
-			$err = $_;
-			die "ERROR: $err"
-		};
-		
-		
-		#------------------------------------------------------------------------------#
-		# Add classification data
-		# => id_change indicates version of data --> should change
-		# => existing records should not have changed
-		#------------------------------------------------------------------------------#
-		try {
-			$err = "";
-			$resR = "";
-			$resDerivedR = "";
-			$resSeqR = "";
-			$resClassR = "";
-			$resChangeR = "";
-						
-			$err = qx{perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
-				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
-				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
-			};			
-			$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
-				"s.createdby, s.iscontrol, m.value, t.name, t.type, t.selection from patient p full " .
-				"outer join sample s on p.id = s.id_patient full outer join measurement m on s.id = m.id_sample " .
-				"full outer join type t on m.id_type = t.id order by accession asc, createdate asc, iscontrol asc, name asc"
-			);
-			$resDerivedR = $dbh->selectall_arrayref("select accession, createdate, timepoint, name, type, value " .
-				"from v_measurements where name in (?, ?, ?, ?, ?, ?, ?, ?) order by accession asc, createdate asc, name asc", {},
-				(
-					'z-score',
-					'z-score category',
-					'z-score subcategory',
-					'category of difference in body mass at delivery',
-					'difference in body mass at delivery',
-					'mother\'s age at delivery',
-					'mother\'s pre-pregnancy BMI',
-					'mother\'s pre-pregnancy BMI category'
-				)	
-			);
-			$resSeqR = $dbh->selectall_arrayref(
-				"select p.alias, p.accession, p.birthdate, s.createdate, case when s.iscontrol = '0' then 'f' when s.iscontrol = '1' then 't' end, " .
-					"seq.readid, seq.runid, seq.barcode, seq.flowcellid, seq.callermodel, seq.nucs, seq.quality, seq.seqerr, seq.seqlen " .
-					"from sequence seq left outer join sample s on s.id = seq.id_sample left outer join patient p on p.id = s.id_patient " .
-					"order by seq.readid asc, p.alias asc"
-			);
-			$resClassR = $dbh->selectall_arrayref("select seq.runid, seq.barcode, seq.readid, c.program, c.database, t.name, t.rank " .
-				"from sequence seq inner join classification c on c.id_sequence = seq.id left outer join taxclass tc on " . 
-				"tc.id_classification = c.id left outer join taxonomy t on t.id = tc.id_taxonomy order by seq.readid asc, " .
-				"c.program asc, c.database asc, " .
-				"array_position(array['domain', 'phylum', 'class', 'subclass', 'order', 'suborder', 'family', 'genus', 'species', 'strain'], t.rank) asc, " . 
-				"t.name asc");
-			$resChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
-				"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
-				"on s.id = m.id_sample full outer join type t on m.id_type = t.id full outer join sequence seq " .
-				"on s.id = seq.id_sample full outer join classification c on c.id_sequence = seq.id full outer join taxclass tc on " .
-				"tc.id_classification = c.id full outer join taxonomy tax on tax.id = tc.id_taxonomy group by p.id_change, s.id_change, " .
-				"m.id_change, t.id_change, seq.id_change, c.id_change, tc.id_change, tax.id_change order by p.id_change asc, s.id_change asc, " .
-				"m.id_change asc, t.id_change asc, seq.id_change, c.id_change, tc.id_change, tax.id_change asc"
-			);
-			
-			# Cleanup
-			$dbh = dropDB($dbh, $schema);
-			$dbh = createDB($dbh, $schema);
-		}
-		catch {
-			$err .= $_;
-			print $err;
-			ok (1==2, 'Testing to add classification data with ->' . $name . '<-');
-		}
-		finally {
-			is ($err, "", 'Testing to add classification data with ->' . $name . '<- - error msg');
-			is ($resChangeR, $tmp_expecChangeR, 'Testing to add classification data with ->' . $name . '<- - updated?');
-			is ($resR, $expecMeasureR, 'Testing to add classification data with ->' . $name . '<- - measurements');
-			is ($resDerivedR, $expecDerivedR, 'Testing to add classification data with ->' . $name . '<- - derived measurements');
-			is ($resSeqR, $expecSeqR, 'Testing to add classification data with ->' . $name . '<- - sequences');
-			is ($resClassR, $tmp_expecClassR, 'Testing to add classification data with ->' . $name . '<- - classifications');
-		};
 	}
 	
 	
@@ -14218,119 +14607,124 @@ sub test_class {
 	# Ignore old records when inserting full Excel, Excel with all samples for
 	# patient, Excel with one selected sample for one patient.
 	#------------------------------------------------------------------------------#
-	@runs = (
-		[$testF_seq, 'full file'],
-		[$testF_seq_onePat, 'one patient'],
-		[$testF_seq_oneSampl, 'one sample'],
-	);
-	my $tmp_expecChangeR = "";
-	
-	foreach my $run (@runs) {
-		my ($file, $name) = @{$run};
-
+	foreach my $classifier (@classifiers) {
+		my @runs = (
+			[$files{$classifier}->{'testF_seq'}, 'full file'],
+			[$files{$classifier}->{'testF_seq_onePat'}, 'one patient'],
+			[$files{$classifier}->{'testF_seq_oneSampl'}, 'one sample'],
+		);
+		my $tmp_expecChangeR = "";
 		
-		#------------------------------------------------------------------------------#
-		# Always initialize with Excel including classification data
-		#------------------------------------------------------------------------------#
-		try {
-			$err = "";
+		foreach my $run (@runs) {
+			my ($file, $name) = @{$run};
+	
 			
-			qx{perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath \\
-				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
-				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
+			#------------------------------------------------------------------------------#
+			# Always initialize with Excel including classification data
+			#------------------------------------------------------------------------------#
+			try {
+				$err = "";
+				
+				qx{export PERL5LIB="$lib"; \\
+					perl ../importSGA.pl --debug --verbose --table $files{$classifier}->{'testF_seq'} \\
+						--data $basePath --taxonomy $taxP --format xlsx \\
+						--whogirls ./data/spreadsheets/whogirls.xlsx --whoboys ./data/spreadsheets/whoboys.xlsx \\
+						2>&1 1>/dev/null
+				};
+				
+				$tmp_expecChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
+					"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
+					"on s.id = m.id_sample full outer join type t on m.id_type = t.id full outer join sequence seq " .
+					"on s.id = seq.id_sample full outer join classification c on c.id_sequence = seq.id full outer join taxclass tc on " .
+					"tc.id_classification = c.id full outer join taxonomy tax on tax.id = tc.id_taxonomy group by p.id_change, s.id_change, " .
+					"m.id_change, t.id_change, seq.id_change, c.id_change, tc.id_change, tax.id_change order by p.id_change asc, s.id_change asc, " .
+					"m.id_change asc, t.id_change asc, seq.id_change, c.id_change, tc.id_change, tax.id_change asc"
+				);
+			}
+			catch {
+				$err = $_;
+				die "ERROR: $err"
 			};
 			
-			$tmp_expecChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
-				"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
-				"on s.id = m.id_sample full outer join type t on m.id_type = t.id full outer join sequence seq " .
-				"on s.id = seq.id_sample full outer join classification c on c.id_sequence = seq.id full outer join taxclass tc on " .
-				"tc.id_classification = c.id full outer join taxonomy tax on tax.id = tc.id_taxonomy group by p.id_change, s.id_change, " .
-				"m.id_change, t.id_change, seq.id_change, c.id_change, tc.id_change, tax.id_change order by p.id_change asc, s.id_change asc, " .
-				"m.id_change asc, t.id_change asc, seq.id_change, c.id_change, tc.id_change, tax.id_change asc"
-			);
-		}
-		catch {
-			$err = $_;
-			die "ERROR: $err"
-		};
-		
-		
-		#------------------------------------------------------------------------------#
-		# Attempt to add old classification data
-		# => id_change indicates version of data --> should not change
-		# => there should be no duplicates of records
-		# => no records should have changed
-		#------------------------------------------------------------------------------#
-		try {
-			$err = "";
-			$resR = "";
-			$resDerivedR = "";
-			$resSeqR = "";
-			$resClassR = "";
-			$resChangeR = "";
-						
-			$err = qx{perl ../importSGA.pl --debug --verbose --table $file --data $basePath \\
-				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
-				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
-			};			
-			$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
-				"s.createdby, s.iscontrol, m.value, t.name, t.type, t.selection from patient p full " .
-				"outer join sample s on p.id = s.id_patient full outer join measurement m on s.id = m.id_sample " .
-				"full outer join type t on m.id_type = t.id order by accession asc, createdate asc, iscontrol asc, name asc"
-			);
-			$resDerivedR = $dbh->selectall_arrayref("select accession, createdate, timepoint, name, type, value " .
-				"from v_measurements where name in (?, ?, ?, ?, ?, ?, ?, ?) order by accession asc, createdate asc, name asc", {},
-				(
-					'z-score',
-					'z-score category',
-					'z-score subcategory',
-					'category of difference in body mass at delivery',
-					'difference in body mass at delivery',
-					'mother\'s age at delivery',
-					'mother\'s pre-pregnancy BMI',
-					'mother\'s pre-pregnancy BMI category'
-				)	
-			);
-			$resSeqR = $dbh->selectall_arrayref(
-				"select p.alias, p.accession, p.birthdate, s.createdate, case when s.iscontrol = '0' then 'f' when s.iscontrol = '1' then 't' end, " .
-					"seq.readid, seq.runid, seq.barcode, seq.flowcellid, seq.callermodel, seq.nucs, seq.quality, seq.seqerr, seq.seqlen " .
-					"from sequence seq left outer join sample s on s.id = seq.id_sample left outer join patient p on p.id = s.id_patient " .
-					"order by seq.readid asc, p.alias asc"
-			);
-			$resClassR = $dbh->selectall_arrayref("select seq.runid, seq.barcode, seq.readid, c.program, c.database, t.name, t.rank " .
-				"from sequence seq inner join classification c on c.id_sequence = seq.id left outer join taxclass tc on " . 
-				"tc.id_classification = c.id left outer join taxonomy t on t.id = tc.id_taxonomy order by seq.readid asc, " .
-				"c.program asc, c.database asc, " .
-				"array_position(array['domain', 'phylum', 'class', 'subclass', 'order', 'suborder', 'family', 'genus', 'species', 'strain'], t.rank) asc, " . 
-				"t.name asc");
-			$resChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
-				"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
-				"on s.id = m.id_sample full outer join type t on m.id_type = t.id full outer join sequence seq " .
-				"on s.id = seq.id_sample full outer join classification c on c.id_sequence = seq.id full outer join taxclass tc on " .
-				"tc.id_classification = c.id full outer join taxonomy tax on tax.id = tc.id_taxonomy group by p.id_change, s.id_change, " .
-				"m.id_change, t.id_change, seq.id_change, c.id_change, tc.id_change, tax.id_change order by p.id_change asc, s.id_change asc, " .
-				"m.id_change asc, t.id_change asc, seq.id_change, c.id_change, tc.id_change, tax.id_change asc"
-			);
 			
-			# Cleanup
-			$dbh = dropDB($dbh, $schema);
-			$dbh = createDB($dbh, $schema);
+			#------------------------------------------------------------------------------#
+			# Attempt to add old classification data
+			# => id_change indicates version of data --> should not change
+			# => there should be no duplicates of records
+			# => no records should have changed
+			#------------------------------------------------------------------------------#
+			try {
+				$err = "";
+				$resR = "";
+				$resDerivedR = "";
+				$resSeqR = "";
+				$resClassR = "";
+				$resChangeR = "";
+							
+				$err = qx{export PERL5LIB="$lib"; \\
+					perl ../importSGA.pl --debug --verbose --table $files{$classifier}->{'testF_seq'} \\
+						--data $basePath --taxonomy $taxP --format xlsx \\
+						--whogirls ./data/spreadsheets/whogirls.xlsx --whoboys ./data/spreadsheets/whoboys.xlsx \\
+						2>&1 1>/dev/null
+				};			
+				$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
+					"s.createdby, s.iscontrol, m.value, t.name, t.type, t.selection from patient p full " .
+					"outer join sample s on p.id = s.id_patient full outer join measurement m on s.id = m.id_sample " .
+					"full outer join type t on m.id_type = t.id order by accession asc, createdate asc, iscontrol asc, name asc"
+				);
+				$resDerivedR = $dbh->selectall_arrayref("select accession, createdate, timepoint, name, type, value " .
+					"from v_measurements where name in (?, ?, ?, ?, ?, ?, ?, ?) order by accession asc, createdate asc, name asc", {},
+					(
+						'z-score',
+						'z-score category',
+						'z-score subcategory',
+						'category of difference in body mass at delivery',
+						'difference in body mass at delivery',
+						'mother\'s age at delivery',
+						'mother\'s pre-pregnancy BMI',
+						'mother\'s pre-pregnancy BMI category'
+					)	
+				);
+				$resSeqR = $dbh->selectall_arrayref(
+					"select p.alias, p.accession, p.birthdate, s.createdate, case when s.iscontrol = '0' then 'f' when s.iscontrol = '1' then 't' end, " .
+						"seq.readid, seq.runid, seq.barcode, seq.flowcellid, seq.callermodel, seq.nucs, seq.quality, seq.seqerr, seq.seqlen " .
+						"from sequence seq left outer join sample s on s.id = seq.id_sample left outer join patient p on p.id = s.id_patient " .
+						"order by seq.readid asc, p.alias asc"
+				);
+				$resClassR = $dbh->selectall_arrayref("select seq.runid, seq.barcode, seq.readid, c.program, c.database, t.name, t.rank " .
+					"from sequence seq inner join classification c on c.id_sequence = seq.id left outer join taxclass tc on " . 
+					"tc.id_classification = c.id left outer join taxonomy t on t.id = tc.id_taxonomy order by seq.readid asc, " .
+					"c.program asc, c.database asc, " .
+					"array_position(array['domain', 'phylum', 'class', 'subclass', 'order', 'suborder', 'family', 'genus', 'species', 'strain'], t.rank) asc, " . 
+					"t.name asc");
+				$resChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
+					"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
+					"on s.id = m.id_sample full outer join type t on m.id_type = t.id full outer join sequence seq " .
+					"on s.id = seq.id_sample full outer join classification c on c.id_sequence = seq.id full outer join taxclass tc on " .
+					"tc.id_classification = c.id full outer join taxonomy tax on tax.id = tc.id_taxonomy group by p.id_change, s.id_change, " .
+					"m.id_change, t.id_change, seq.id_change, c.id_change, tc.id_change, tax.id_change order by p.id_change asc, s.id_change asc, " .
+					"m.id_change asc, t.id_change asc, seq.id_change, c.id_change, tc.id_change, tax.id_change asc"
+				);
+				
+				# Cleanup
+				$dbh = dropDB($dbh, $schema);
+				$dbh = createDB($dbh, $schema);
+			}
+			catch {
+				$err .= $_;
+				print $err;
+				ok (1==2, 'Testing to add old classification data for ->' . $classifier . '<- with ->' . $name . '<-');
+			}
+			finally {
+				is ($err, "", 'Testing to add old classification data for ->' . $classifier . '<- with ->' . $name . '<- - error msg');
+				is ($resChangeR, $tmp_expecChangeR, 'Testing to add old classification data for ->' . $classifier . '<- with ->' . $name . '<- - updated?');
+				is ($resR, $expecMeasureR, 'Testing to add old classification data for ->' . $classifier . '<- data with ->' . $name . '<- - derived measurements');
+				is ($resSeqR, $expecSeqR, 'Testing to add old classification data for ->' . $classifier . '<- with ->' . $name . '<- - sequences');
+				is ($resClassR, $expecs{$classifier}->{'expecClassR'}, 'Testing to add old classification data for ->' . $classifier . '<- with ->' . $name . '<- - classifications');
+			};
 		}
-		catch {
-			$err .= $_;
-			print $err;
-			ok (1==2, 'Testing to add old classification data with ->' . $name . '<-');
-		}
-		finally {
-			is ($err, "", 'Testing to add old classification data with ->' . $name . '<- - error msg');
-			is ($resChangeR, $tmp_expecChangeR, 'Testing to add old classification data with ->' . $name . '<- - updated?');
-			is ($resR, $expecMeasureR, 'Testing to add old classification data with ->' . $name . '<- - measurements');
-			is ($resDerivedR, $expecDerivedR, 'Testing to add old classification data with ->' . $name . '<- - derived measurements');
-			is ($resSeqR, $expecSeqR, 'Testing to add old classification data with ->' . $name . '<- - sequences');
-			is ($resClassR, $expecClassR, 'Testing to add old classification data with ->' . $name . '<- - classifications');
-		};
 	}
-	
+
 	
 	#------------------------------------------------------------------------------#
 	# Attempt to update classification data (taxclass).
@@ -14340,11 +14734,6 @@ sub test_class {
 	# => does not replace old connections --> huge mess
 	# => id_change indicates version of data --> should change
 	#------------------------------------------------------------------------------#
-	@runs = (
-		[$testF_seq, 'full file', $expecClass_updatedR],
-		[$testF_seq_onePat, 'one patient', $expecClass_onePat_updatedR],
-		[$testF_seq_oneSampl, 'one sample', $expecClass_oneSampl_updatedR],
-	);
 	$basePath_mod = $basePath =~ s/org$/mod_class/r;
 	# id_change: patient, sample, measurement, type, sequence, classification, taxclass, taxonomy
 	$expecChange_modR = [
@@ -14356,100 +14745,111 @@ sub test_class {
 		[1, 1, undef, undef, undef, undef, undef, undef] # control sample without measurement/type/sequences/classifications/taxclass/taxonomy
 	];
 	
-	foreach my $run (@runs) {
-		my ($file, $name, $tmp_expecClassR) = @{$run};
-
+	foreach my $classifier (@classifiers) {
+		my @runs = (
+			[$files{$classifier}->{'testF_seq'}, 'full file', $expecs{$classifier}->{'expecClass_updatedR'}],
+			[$files{$classifier}->{'testF_seq_onePat'}, 'one patient', $expecs{$classifier}->{'expecClass_onePat_updatedR'}],
+			[$files{$classifier}->{'testF_seq_oneSampl'}, 'one sample', $expecs{$classifier}->{'expecClass_oneSampl_updatedR'}],
+		);
 		
-		#------------------------------------------------------------------------------#
-		# Always initialize with Excel including classification data
-		#------------------------------------------------------------------------------#
-		try {
-			$err = "";
+		foreach my $run (@runs) {
+			my ($file, $name, $tmp_expecClassR) = @{$run};
+	
 			
-			qx{perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath \\
-				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
-				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
+			#------------------------------------------------------------------------------#
+			# Always initialize with Excel including classification data
+			#------------------------------------------------------------------------------#
+			try {
+				$err = "";
+				
+				qx{export PERL5LIB="$lib"; \\
+					perl ../importSGA.pl --debug --verbose --table $files{$classifier}->{'testF_seq'} \\
+						--data $basePath --taxonomy $taxP --format xlsx \\
+						--whogirls ./data/spreadsheets/whogirls.xlsx --whoboys ./data/spreadsheets/whoboys.xlsx \\
+						2>&1 1>/dev/null
+				};
+			}
+			catch {
+				$err = $_;
+				die "ERROR: $err"
+			};
+			
+			
+			#------------------------------------------------------------------------------#
+			# Change basePath to dir with updated classification files
+			#------------------------------------------------------------------------------#
+			try {
+				$err = "";
+				$resR = "";
+				$resDerivedR = "";
+				$resSeqR = "";
+				$resClassR = "";
+				$resChangeR = "";
+							
+				$err = qx{export PERL5LIB="$lib"; \\
+					perl ../importSGA.pl --debug --verbose --table $file --data $basePath_mod \\
+						--taxonomy $taxP --format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
+						--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null
+				};			
+				$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
+					"s.createdby, s.iscontrol, m.value, t.name, t.type, t.selection from patient p full " .
+					"outer join sample s on p.id = s.id_patient full outer join measurement m on s.id = m.id_sample " .
+					"full outer join type t on m.id_type = t.id order by accession asc, createdate asc, iscontrol asc, name asc"
+				);
+				$resDerivedR = $dbh->selectall_arrayref("select accession, createdate, timepoint, name, type, value " .
+					"from v_measurements where name in (?, ?, ?, ?, ?, ?, ?, ?) order by accession asc, createdate asc, name asc", {},
+					(
+						'z-score',
+						'z-score category',
+						'z-score subcategory',
+						'category of difference in body mass at delivery',
+						'difference in body mass at delivery',
+						'mother\'s age at delivery',
+						'mother\'s pre-pregnancy BMI',
+						'mother\'s pre-pregnancy BMI category'
+					)	
+				);
+				$resSeqR = $dbh->selectall_arrayref(
+					"select p.alias, p.accession, p.birthdate, s.createdate, case when s.iscontrol = '0' then 'f' when s.iscontrol = '1' then 't' end, " .
+						"seq.readid, seq.runid, seq.barcode, seq.flowcellid, seq.callermodel, seq.nucs, seq.quality, seq.seqerr, seq.seqlen " .
+						"from sequence seq left outer join sample s on s.id = seq.id_sample left outer join patient p on p.id = s.id_patient " .
+						"order by seq.readid asc, p.alias asc"
+				);
+				$resClassR = $dbh->selectall_arrayref("select seq.runid, seq.barcode, seq.readid, c.program, c.database, t.name, t.rank " .
+					"from sequence seq inner join classification c on c.id_sequence = seq.id left outer join taxclass tc on " . 
+					"tc.id_classification = c.id left outer join taxonomy t on t.id = tc.id_taxonomy order by seq.readid asc, " .
+					"c.program asc, c.database asc, " .
+					"array_position(array['domain', 'phylum', 'class', 'subclass', 'order', 'suborder', 'family', 'genus', 'species', 'strain'], t.rank) asc, " . 
+					"t.name asc");
+				$resChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
+					"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
+					"on s.id = m.id_sample full outer join type t on m.id_type = t.id full outer join sequence seq " .
+					"on s.id = seq.id_sample full outer join classification c on c.id_sequence = seq.id full outer join taxclass tc on " .
+					"tc.id_classification = c.id full outer join taxonomy tax on tax.id = tc.id_taxonomy group by p.id_change, s.id_change, " .
+					"m.id_change, t.id_change, seq.id_change, c.id_change, tc.id_change, tax.id_change order by p.id_change asc, s.id_change asc, " .
+					"m.id_change asc, t.id_change asc, seq.id_change, c.id_change, tc.id_change, tax.id_change asc"
+				);
+				
+				# Cleanup
+				$dbh = dropDB($dbh, $schema);
+				$dbh = createDB($dbh, $schema);
+			}
+			catch {
+				$err .= $_;
+				print $err;
+				ok (1==2, 'Testing to update classification data for ->' . $classifier . '<- with ->' . $name . '<- [1/3]');
+			}
+			finally {
+				is ($err, "", 'Testing to update classification data for ->' . $classifier . '<- with ->' . $name . '<- [1/3] - error msg');
+				is ($resChangeR, $expecChange_modR, 'Testing to update classification data for ->' . $classifier . '<- with ->' . $name . '<- [1/3] - updated?');
+				is ($resR, $expecMeasureR, 'Testing to update classification data for ->' . $classifier . '<- with ->' . $name . '<- [1/3] - measurements');
+				is ($resDerivedR, $expecDerivedR, 'Testing to update classification data for ->' . $classifier . '<- with ->' . $name . '<- [1/3] - derived measurements');
+				is ($resSeqR, $expecSeqR, 'Testing to update classification data for ->' . $classifier . '<- with ->' . $name . '<- [1/3] - sequences');
+				is ($resClassR, $tmp_expecClassR, 'Testing to update classification data for ->' . $classifier . '<- with ->' . $name . '<- [1/3] - classifications');
 			};
 		}
-		catch {
-			$err = $_;
-			die "ERROR: $err"
-		};
-		
-		
-		#------------------------------------------------------------------------------#
-		# Change basePath to dir with updated classification files
-		#------------------------------------------------------------------------------#
-		try {
-			$err = "";
-			$resR = "";
-			$resDerivedR = "";
-			$resSeqR = "";
-			$resClassR = "";
-			$resChangeR = "";
-						
-			$err = qx{perl ../importSGA.pl --debug --verbose --table $file --data $basePath_mod \\
-				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
-				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
-			};			
-			$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
-				"s.createdby, s.iscontrol, m.value, t.name, t.type, t.selection from patient p full " .
-				"outer join sample s on p.id = s.id_patient full outer join measurement m on s.id = m.id_sample " .
-				"full outer join type t on m.id_type = t.id order by accession asc, createdate asc, iscontrol asc, name asc"
-			);
-			$resDerivedR = $dbh->selectall_arrayref("select accession, createdate, timepoint, name, type, value " .
-				"from v_measurements where name in (?, ?, ?, ?, ?, ?, ?, ?) order by accession asc, createdate asc, name asc", {},
-				(
-					'z-score',
-					'z-score category',
-					'z-score subcategory',
-					'category of difference in body mass at delivery',
-					'difference in body mass at delivery',
-					'mother\'s age at delivery',
-					'mother\'s pre-pregnancy BMI',
-					'mother\'s pre-pregnancy BMI category'
-				)	
-			);
-			$resSeqR = $dbh->selectall_arrayref(
-				"select p.alias, p.accession, p.birthdate, s.createdate, case when s.iscontrol = '0' then 'f' when s.iscontrol = '1' then 't' end, " .
-					"seq.readid, seq.runid, seq.barcode, seq.flowcellid, seq.callermodel, seq.nucs, seq.quality, seq.seqerr, seq.seqlen " .
-					"from sequence seq left outer join sample s on s.id = seq.id_sample left outer join patient p on p.id = s.id_patient " .
-					"order by seq.readid asc, p.alias asc"
-			);
-			$resClassR = $dbh->selectall_arrayref("select seq.runid, seq.barcode, seq.readid, c.program, c.database, t.name, t.rank " .
-				"from sequence seq inner join classification c on c.id_sequence = seq.id left outer join taxclass tc on " . 
-				"tc.id_classification = c.id left outer join taxonomy t on t.id = tc.id_taxonomy order by seq.readid asc, " .
-				"c.program asc, c.database asc, " .
-				"array_position(array['domain', 'phylum', 'class', 'subclass', 'order', 'suborder', 'family', 'genus', 'species', 'strain'], t.rank) asc, " . 
-				"t.name asc");
-			$resChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
-				"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
-				"on s.id = m.id_sample full outer join type t on m.id_type = t.id full outer join sequence seq " .
-				"on s.id = seq.id_sample full outer join classification c on c.id_sequence = seq.id full outer join taxclass tc on " .
-				"tc.id_classification = c.id full outer join taxonomy tax on tax.id = tc.id_taxonomy group by p.id_change, s.id_change, " .
-				"m.id_change, t.id_change, seq.id_change, c.id_change, tc.id_change, tax.id_change order by p.id_change asc, s.id_change asc, " .
-				"m.id_change asc, t.id_change asc, seq.id_change, c.id_change, tc.id_change, tax.id_change asc"
-			);
-			
-			# Cleanup
-			$dbh = dropDB($dbh, $schema);
-			$dbh = createDB($dbh, $schema);
-		}
-		catch {
-			$err .= $_;
-			print $err;
-			ok (1==2, 'Testing to update classification data with ->' . $name . '<- [1/3]');
-		}
-		finally {
-			is ($err, "", 'Testing to update classification data with ->' . $name . '<- [1/3] - error msg');
-			is ($resChangeR, $expecChange_modR, 'Testing to update classification data with ->' . $name . '<- [1/3] - updated?');
-			is ($resR, $expecMeasureR, 'Testing to update classification data with ->' . $name . '<- [1/3] - measurements');
-			is ($resDerivedR, $expecDerivedR, 'Testing to update classification data with ->' . $name . '<- [1/3] - derived measurements');
-			is ($resSeqR, $expecSeqR, 'Testing to update classification data with ->' . $name . '<- [1/3] - sequences');
-			is ($resClassR, $tmp_expecClassR, 'Testing to update classification data with ->' . $name . '<- [1/3] - classifications');
-		};
 	}
-
+	
 
 	#------------------------------------------------------------------------------#
 	# Attempt to update classification data (classification).
@@ -14459,11 +14859,6 @@ sub test_class {
 	# => does not replace old classification, but adds a new
 	# => id_change indicates version of data --> should change
 	#------------------------------------------------------------------------------#
-	@runs = (
-		[$testF_updClassDb, 'full file', $expecClass_updatedClassDbR],
-		[$testF_updClassDb_onePat, 'one patient', $expecClass_updatedClassDb_onePatR],
-		[$testF_updClassDb_oneSampl, 'one sample', $expecClass_updatedClassDb_oneSamplR],
-	);
 	$basePath_mod = $basePath =~ s/org$/mod_class/r;
 	# id_change: patient, sample, measurement, type, sequence, classification, taxclass, taxonomy
 	$expecChange_modR = [
@@ -14475,99 +14870,110 @@ sub test_class {
 		[1, 1, undef, undef, undef, undef, undef, undef] # control sample without measurement/type/sequences/classifications/taxclass/taxonomy
 	];
 	
-	foreach my $run (@runs) {
-		my ($file, $name, $tmp_expecClassR) = @{$run};
-
+	foreach my $classifier (@classifiers) {
+		my @runs = (
+			[$files{$classifier}->{'testF_updClassDb'}, 'full file', $expecs{$classifier}->{'expecClass_updatedClassDbR'}],
+			[$files{$classifier}->{'testF_updClassDb_onePat'}, 'one patient', $expecs{$classifier}->{'expecClass_updatedClassDb_onePatR'}],
+			[$files{$classifier}->{'testF_updClassDb_oneSampl'}, 'one sample', $expecs{$classifier}->{'expecClass_updatedClassDb_oneSamplR'}],
+		);
 		
-		#------------------------------------------------------------------------------#
-		# Always initialize with Excel including classification data
-		#------------------------------------------------------------------------------#
-		try {
-			$err = "";
+		foreach my $run (@runs) {
+			my ($file, $name, $tmp_expecClassR) = @{$run};
+	
 			
-			qx{perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath \\
-				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
-				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
+			#------------------------------------------------------------------------------#
+			# Always initialize with Excel including classification data
+			#------------------------------------------------------------------------------#
+			try {
+				$err = "";
+				
+				qx{export PERL5LIB="$lib"; \\
+					perl ../importSGA.pl --debug --verbose --table $files{$classifier}->{'testF_seq'} \\
+						--data $basePath --taxonomy $taxP --format xlsx \\
+						--whogirls ./data/spreadsheets/whogirls.xlsx --whoboys ./data/spreadsheets/whoboys.xlsx \\
+						2>&1 1>/dev/null \\
+				};
+			}
+			catch {
+				$err = $_;
+				die "ERROR: $err"
+			};
+			
+			
+			#------------------------------------------------------------------------------#
+			# Change basePath to dir with updated classification files and Excel to file
+			# with updated database. Sequences remain the same.
+			#------------------------------------------------------------------------------#
+			try {
+				$err = "";
+				$resR = "";
+				$resDerivedR = "";
+				$resSeqR = "";
+				$resClassR = "";
+				$resChangeR = "";
+							
+				$err = qx{export PERL5LIB="$lib"; \\
+					perl ../importSGA.pl --debug --verbose --table $file --data $basePath_mod \\
+						--taxonomy $taxP --format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
+						--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
+				};			
+				$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
+					"s.createdby, s.iscontrol, m.value, t.name, t.type, t.selection from patient p full " .
+					"outer join sample s on p.id = s.id_patient full outer join measurement m on s.id = m.id_sample " .
+					"full outer join type t on m.id_type = t.id order by accession asc, createdate asc, iscontrol asc, name asc"
+				);
+				$resDerivedR = $dbh->selectall_arrayref("select accession, createdate, timepoint, name, type, value " .
+					"from v_measurements where name in (?, ?, ?, ?, ?, ?, ?, ?) order by accession asc, createdate asc, name asc", {},
+					(
+						'z-score',
+						'z-score category',
+						'z-score subcategory',
+						'category of difference in body mass at delivery',
+						'difference in body mass at delivery',
+						'mother\'s age at delivery',
+						'mother\'s pre-pregnancy BMI',
+						'mother\'s pre-pregnancy BMI category'
+					)	
+				);
+				$resSeqR = $dbh->selectall_arrayref(
+					"select p.alias, p.accession, p.birthdate, s.createdate, case when s.iscontrol = '0' then 'f' when s.iscontrol = '1' then 't' end, " .
+						"seq.readid, seq.runid, seq.barcode, seq.flowcellid, seq.callermodel, seq.nucs, seq.quality, seq.seqerr, seq.seqlen " .
+						"from sequence seq left outer join sample s on s.id = seq.id_sample left outer join patient p on p.id = s.id_patient " .
+						"order by seq.readid asc, p.alias asc"
+				);
+				$resClassR = $dbh->selectall_arrayref("select seq.runid, seq.barcode, seq.readid, c.program, c.database, t.name, t.rank " .
+					"from sequence seq inner join classification c on c.id_sequence = seq.id left outer join taxclass tc on " . 
+					"tc.id_classification = c.id left outer join taxonomy t on t.id = tc.id_taxonomy order by seq.readid asc, " .
+					"c.program asc, c.database asc, " .
+					"array_position(array['domain', 'phylum', 'class', 'subclass', 'order', 'suborder', 'family', 'genus', 'species', 'strain'], t.rank) asc, " . 
+					"t.name asc");
+				$resChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
+					"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
+					"on s.id = m.id_sample full outer join type t on m.id_type = t.id full outer join sequence seq " .
+					"on s.id = seq.id_sample full outer join classification c on c.id_sequence = seq.id full outer join taxclass tc on " .
+					"tc.id_classification = c.id full outer join taxonomy tax on tax.id = tc.id_taxonomy group by p.id_change, s.id_change, " .
+					"m.id_change, t.id_change, seq.id_change, c.id_change, tc.id_change, tax.id_change order by p.id_change asc, s.id_change asc, " .
+					"m.id_change asc, t.id_change asc, seq.id_change, c.id_change, tc.id_change, tax.id_change asc"
+				);
+				
+				# Cleanup
+				$dbh = dropDB($dbh, $schema);
+				$dbh = createDB($dbh, $schema);
+			}
+			catch {
+				$err .= $_;
+				print $err;
+				ok (1==2, 'Testing to update classification data for ->' . $classifier . '<- with ->' . $name . '<- [2/3]');
+			}
+			finally {
+				is ($err, "", 'Testing to update classification data for ->' . $classifier . '<- with ->' . $name . '<- [2/3] - error msg');
+				is ($resChangeR, $expecChange_modR, 'Testing to update classification data for ->' . $classifier . '<- with ->' . $name . '<- [2/3] - updated?');
+				is ($resR, $expecMeasureR, 'Testing to update classification data for ->' . $classifier . '<- with ->' . $name . '<- [2/3] - measurements');
+				is ($resDerivedR, $expecDerivedR, 'Testing to update classification data for ->' . $classifier . '<- with ->' . $name . '<- [2/3] - derived measurements');
+				is ($resSeqR, $expecSeqR, 'Testing to update classification data for ->' . $classifier . '<- with ->' . $name . '<- [2/3] - sequences');
+				is ($resClassR, $tmp_expecClassR, 'Testing to update classification data for ->' . $classifier . '<- with ->' . $name . '<- [2/3] - classifications');
 			};
 		}
-		catch {
-			$err = $_;
-			die "ERROR: $err"
-		};
-		
-		
-		#------------------------------------------------------------------------------#
-		# Change basePath to dir with updated classification files and Excel to file
-		# with updated database. Sequences remain the same.
-		#------------------------------------------------------------------------------#
-		try {
-			$err = "";
-			$resR = "";
-			$resDerivedR = "";
-			$resSeqR = "";
-			$resClassR = "";
-			$resChangeR = "";
-						
-			$err = qx{perl ../importSGA.pl --debug --verbose --table $file --data $basePath_mod \\
-				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
-				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
-			};			
-			$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
-				"s.createdby, s.iscontrol, m.value, t.name, t.type, t.selection from patient p full " .
-				"outer join sample s on p.id = s.id_patient full outer join measurement m on s.id = m.id_sample " .
-				"full outer join type t on m.id_type = t.id order by accession asc, createdate asc, iscontrol asc, name asc"
-			);
-			$resDerivedR = $dbh->selectall_arrayref("select accession, createdate, timepoint, name, type, value " .
-				"from v_measurements where name in (?, ?, ?, ?, ?, ?, ?, ?) order by accession asc, createdate asc, name asc", {},
-				(
-					'z-score',
-					'z-score category',
-					'z-score subcategory',
-					'category of difference in body mass at delivery',
-					'difference in body mass at delivery',
-					'mother\'s age at delivery',
-					'mother\'s pre-pregnancy BMI',
-					'mother\'s pre-pregnancy BMI category'
-				)	
-			);
-			$resSeqR = $dbh->selectall_arrayref(
-				"select p.alias, p.accession, p.birthdate, s.createdate, case when s.iscontrol = '0' then 'f' when s.iscontrol = '1' then 't' end, " .
-					"seq.readid, seq.runid, seq.barcode, seq.flowcellid, seq.callermodel, seq.nucs, seq.quality, seq.seqerr, seq.seqlen " .
-					"from sequence seq left outer join sample s on s.id = seq.id_sample left outer join patient p on p.id = s.id_patient " .
-					"order by seq.readid asc, p.alias asc"
-			);
-			$resClassR = $dbh->selectall_arrayref("select seq.runid, seq.barcode, seq.readid, c.program, c.database, t.name, t.rank " .
-				"from sequence seq inner join classification c on c.id_sequence = seq.id left outer join taxclass tc on " . 
-				"tc.id_classification = c.id left outer join taxonomy t on t.id = tc.id_taxonomy order by seq.readid asc, " .
-				"c.program asc, c.database asc, " .
-				"array_position(array['domain', 'phylum', 'class', 'subclass', 'order', 'suborder', 'family', 'genus', 'species', 'strain'], t.rank) asc, " . 
-				"t.name asc");
-			$resChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
-				"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
-				"on s.id = m.id_sample full outer join type t on m.id_type = t.id full outer join sequence seq " .
-				"on s.id = seq.id_sample full outer join classification c on c.id_sequence = seq.id full outer join taxclass tc on " .
-				"tc.id_classification = c.id full outer join taxonomy tax on tax.id = tc.id_taxonomy group by p.id_change, s.id_change, " .
-				"m.id_change, t.id_change, seq.id_change, c.id_change, tc.id_change, tax.id_change order by p.id_change asc, s.id_change asc, " .
-				"m.id_change asc, t.id_change asc, seq.id_change, c.id_change, tc.id_change, tax.id_change asc"
-			);
-			
-			# Cleanup
-			$dbh = dropDB($dbh, $schema);
-			$dbh = createDB($dbh, $schema);
-		}
-		catch {
-			$err .= $_;
-			print $err;
-			ok (1==2, 'Testing to update classification data with ->' . $name . '<- [2/3]');
-		}
-		finally {
-			is ($err, "", 'Testing to update classification data with ->' . $name . '<- [2/3] - error msg');
-			is ($resChangeR, $expecChange_modR, 'Testing to update classification data with ->' . $name . '<- [2/3] - updated?');
-			is ($resR, $expecMeasureR, 'Testing to update classification data with ->' . $name . '<- [2/3] - measurements');
-			is ($resDerivedR, $expecDerivedR, 'Testing to update classification data with ->' . $name . '<- [2/3] - derived measurements');
-			is ($resSeqR, $expecSeqR, 'Testing to update classification data with ->' . $name . '<- [2/3] - sequences');
-			is ($resClassR, $tmp_expecClassR, 'Testing to update classification data with ->' . $name . '<- [2/3] - classifications');
-		};
 	}
 	
 	
@@ -14579,25 +14985,6 @@ sub test_class {
 	# => does not replace old classification, but adds a new
 	# => id_change indicates version of data --> should change
 	#------------------------------------------------------------------------------#
-	my $expecClass_updatedClassPrgrmR = dclone($expecClass_updatedClassDbR);
-	my $expecClass_updatedClassPrgrm_onePatR = dclone($expecClass_updatedClassDb_onePatR);
-	my $expecClass_updatedClassPrgrm_oneSamplR = dclone($expecClass_updatedClassDb_oneSamplR);
-	
-	# Restore database name and change program name for previously altered entries.
-	foreach my $expec ($expecClass_updatedClassPrgrmR, $expecClass_updatedClassPrgrm_onePatR, $expecClass_updatedClassPrgrm_oneSamplR) {
-		foreach my $ref (@{$expec}) {
-			if ($ref->[4] eq "MTX") {
-				$ref->[4] = "RDP";
-				$ref->[3] = "Kraken2"
-			}
-		}
-	}
-	
-	@runs = (
-		[$testF_updClassPrgrm, 'full file', $expecClass_updatedClassPrgrmR],
-		[$testF_updClassPrgrm_onePat, 'one patient', $expecClass_updatedClassPrgrm_onePatR],
-		[$testF_updClassPrgrm_oneSampl, 'one sample', $expecClass_updatedClassPrgrm_oneSamplR],
-	);
 	$basePath_mod = $basePath =~ s/org$/mod_class/r;
 	# id_change: patient, sample, measurement, type, sequence, classification, taxclass, taxonomy
 	$expecChange_modR = [
@@ -14609,107 +14996,120 @@ sub test_class {
 		[1, 1, undef, undef, undef, undef, undef, undef] # control sample without measurement/type/sequences/classifications/taxclass/taxonomy
 	];
 	
-	foreach my $run (@runs) {
-		my ($file, $name, $tmp_expecClassR) = @{$run};
-
+	foreach my $classifier (@classifiers) {
+		my @runs = (
+			[$files{$classifier}->{'testF_updClassPrgrm'}, 'full file', $expecs{$classifier}->{'expecClass_updatedClassPrgrmR'}],
+			[$files{$classifier}->{'testF_updClassPrgrm_onePat'}, 'one patient', $expecs{$classifier}->{'expecClass_updatedClassPrgrm_onePatR'}],
+			[$files{$classifier}->{'testF_updClassPrgrm_oneSampl'}, 'one sample', $expecs{$classifier}->{'expecClass_updatedClassPrgrm_oneSamplR'}],
+		);
 		
-		#------------------------------------------------------------------------------#
-		# Always initialize with Excel including classification data
-		#------------------------------------------------------------------------------#
-		try {
-			$err = "";
+		foreach my $run (@runs) {
+			my ($file, $name, $tmp_expecClassR) = @{$run};
+	
 			
-			qx{perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath \\
-				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
-				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
+			#------------------------------------------------------------------------------#
+			# Always initialize with Excel including classification data
+			#------------------------------------------------------------------------------#
+			try {
+				$err = "";
+				
+				qx{export PERL5LIB="$lib"; \\
+					perl ../importSGA.pl --debug --verbose --table $files{$classifier}->{'testF_seq'} \\
+						--data $basePath --taxonomy $taxP --format xlsx \\
+						--whogirls ./data/spreadsheets/whogirls.xlsx --whoboys ./data/spreadsheets/whoboys.xlsx \\
+						2>&1 1>/dev/null
+				};
+			}
+			catch {
+				$err = $_;
+				die "ERROR: $err"
+			};
+			
+			
+			#------------------------------------------------------------------------------#
+			# Change basePath to dir with updated classification files and Excel to file
+			# with updated program. Sequences remain the same.
+			#------------------------------------------------------------------------------#
+			try {
+				$err = "";
+				$resR = "";
+				$resDerivedR = "";
+				$resSeqR = "";
+				$resClassR = "";
+				$resChangeR = "";
+							
+				$err = qx{export PERL5LIB="$lib"; \\
+					perl ../importSGA.pl --debug --verbose --table $file --data $basePath_mod \\
+						--taxonomy $taxP --format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
+						--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null
+				};			
+				$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
+					"s.createdby, s.iscontrol, m.value, t.name, t.type, t.selection from patient p full " .
+					"outer join sample s on p.id = s.id_patient full outer join measurement m on s.id = m.id_sample " .
+					"full outer join type t on m.id_type = t.id order by accession asc, createdate asc, iscontrol asc, name asc"
+				);
+				$resDerivedR = $dbh->selectall_arrayref("select accession, createdate, timepoint, name, type, value " .
+					"from v_measurements where name in (?, ?, ?, ?, ?, ?, ?, ?) order by accession asc, createdate asc, name asc", {},
+					(
+						'z-score',
+						'z-score category',
+						'z-score subcategory',
+						'category of difference in body mass at delivery',
+						'difference in body mass at delivery',
+						'mother\'s age at delivery',
+						'mother\'s pre-pregnancy BMI',
+						'mother\'s pre-pregnancy BMI category'
+					)	
+				);
+				$resSeqR = $dbh->selectall_arrayref(
+					"select p.alias, p.accession, p.birthdate, s.createdate, case when s.iscontrol = '0' then 'f' when s.iscontrol = '1' then 't' end, " .
+						"seq.readid, seq.runid, seq.barcode, seq.flowcellid, seq.callermodel, seq.nucs, seq.quality, seq.seqerr, seq.seqlen " .
+						"from sequence seq left outer join sample s on s.id = seq.id_sample left outer join patient p on p.id = s.id_patient " .
+						"order by seq.readid asc, p.alias asc"
+				);
+				$resClassR = $dbh->selectall_arrayref("select seq.runid, seq.barcode, seq.readid, c.program, c.database, t.name, t.rank " .
+					"from sequence seq inner join classification c on c.id_sequence = seq.id left outer join taxclass tc on " . 
+					"tc.id_classification = c.id left outer join taxonomy t on t.id = tc.id_taxonomy order by seq.readid asc, " .
+					"c.program asc, c.database asc, " .
+					"array_position(array['domain', 'phylum', 'class', 'subclass', 'order', 'suborder', 'family', 'genus', 'species', 'strain'], t.rank) asc, " . 
+					"t.name asc");
+				$resChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
+					"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
+					"on s.id = m.id_sample full outer join type t on m.id_type = t.id full outer join sequence seq " .
+					"on s.id = seq.id_sample full outer join classification c on c.id_sequence = seq.id full outer join taxclass tc on " .
+					"tc.id_classification = c.id full outer join taxonomy tax on tax.id = tc.id_taxonomy group by p.id_change, s.id_change, " .
+					"m.id_change, t.id_change, seq.id_change, c.id_change, tc.id_change, tax.id_change order by p.id_change asc, s.id_change asc, " .
+					"m.id_change asc, t.id_change asc, seq.id_change, c.id_change, tc.id_change, tax.id_change asc"
+				);
+				
+				# Cleanup
+				$dbh = dropDB($dbh, $schema);
+				$dbh = createDB($dbh, $schema);
+			}
+			catch {
+				$err .= $_;
+				print $err;
+				ok (1==2, 'Testing to update classification data for ->' . $classifier . '<- with ->' . $name . '<- [3/3]');
+			}
+			finally {
+				is ($err, "", 'Testing to update classification data for ->' . $classifier . '<- with ->' . $name . '<- [3/3] - error msg');
+				is ($resChangeR, $expecChange_modR, 'Testing to update classification data for ->' . $classifier . '<- with ->' . $name . '<- [3/3] - updated?');
+				is ($resR, $expecMeasureR, 'Testing to update classification data for ->' . $classifier . '<- with ->' . $name . '<- [3/3] - measurements');
+				is ($resDerivedR, $expecDerivedR, 'Testing to update classification data for ->' . $classifier . '<- with ->' . $name . '<- [3/3] - derived measurements');
+				is ($resSeqR, $expecSeqR, 'Testing to update classification data for ->' . $classifier . '<- with ->' . $name . '<- [3/3] - sequences');
+				is ($resClassR, $tmp_expecClassR, 'Testing to update classification data for ->' . $classifier . '<- with ->' . $name . '<- [3/3] - classifications');
 			};
 		}
-		catch {
-			$err = $_;
-			die "ERROR: $err"
-		};
-		
-		
-		#------------------------------------------------------------------------------#
-		# Change basePath to dir with updated classification files and Excel to file
-		# with updated program. Sequences remain the same.
-		#------------------------------------------------------------------------------#
-		try {
-			$err = "";
-			$resR = "";
-			$resDerivedR = "";
-			$resSeqR = "";
-			$resClassR = "";
-			$resChangeR = "";
-						
-			$err = qx{perl ../importSGA.pl --debug --verbose --table $file --data $basePath_mod \\
-				--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
-				--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
-			};			
-			$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
-				"s.createdby, s.iscontrol, m.value, t.name, t.type, t.selection from patient p full " .
-				"outer join sample s on p.id = s.id_patient full outer join measurement m on s.id = m.id_sample " .
-				"full outer join type t on m.id_type = t.id order by accession asc, createdate asc, iscontrol asc, name asc"
-			);
-			$resDerivedR = $dbh->selectall_arrayref("select accession, createdate, timepoint, name, type, value " .
-				"from v_measurements where name in (?, ?, ?, ?, ?, ?, ?, ?) order by accession asc, createdate asc, name asc", {},
-				(
-					'z-score',
-					'z-score category',
-					'z-score subcategory',
-					'category of difference in body mass at delivery',
-					'difference in body mass at delivery',
-					'mother\'s age at delivery',
-					'mother\'s pre-pregnancy BMI',
-					'mother\'s pre-pregnancy BMI category'
-				)	
-			);
-			$resSeqR = $dbh->selectall_arrayref(
-				"select p.alias, p.accession, p.birthdate, s.createdate, case when s.iscontrol = '0' then 'f' when s.iscontrol = '1' then 't' end, " .
-					"seq.readid, seq.runid, seq.barcode, seq.flowcellid, seq.callermodel, seq.nucs, seq.quality, seq.seqerr, seq.seqlen " .
-					"from sequence seq left outer join sample s on s.id = seq.id_sample left outer join patient p on p.id = s.id_patient " .
-					"order by seq.readid asc, p.alias asc"
-			);
-			$resClassR = $dbh->selectall_arrayref("select seq.runid, seq.barcode, seq.readid, c.program, c.database, t.name, t.rank " .
-				"from sequence seq inner join classification c on c.id_sequence = seq.id left outer join taxclass tc on " . 
-				"tc.id_classification = c.id left outer join taxonomy t on t.id = tc.id_taxonomy order by seq.readid asc, " .
-				"c.program asc, c.database asc, " .
-				"array_position(array['domain', 'phylum', 'class', 'subclass', 'order', 'suborder', 'family', 'genus', 'species', 'strain'], t.rank) asc, " . 
-				"t.name asc");
-			$resChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
-				"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
-				"on s.id = m.id_sample full outer join type t on m.id_type = t.id full outer join sequence seq " .
-				"on s.id = seq.id_sample full outer join classification c on c.id_sequence = seq.id full outer join taxclass tc on " .
-				"tc.id_classification = c.id full outer join taxonomy tax on tax.id = tc.id_taxonomy group by p.id_change, s.id_change, " .
-				"m.id_change, t.id_change, seq.id_change, c.id_change, tc.id_change, tax.id_change order by p.id_change asc, s.id_change asc, " .
-				"m.id_change asc, t.id_change asc, seq.id_change, c.id_change, tc.id_change, tax.id_change asc"
-			);
-			
-			# Cleanup
-			$dbh = dropDB($dbh, $schema);
-			$dbh = createDB($dbh, $schema);
-		}
-		catch {
-			$err .= $_;
-			print $err;
-			ok (1==2, 'Testing to update classification data with ->' . $name . '<- [3/3]');
-		}
-		finally {
-			is ($err, "", 'Testing to update classification data with ->' . $name . '<- [3/3] - error msg');
-			is ($resChangeR, $expecChange_modR, 'Testing to update classification data with ->' . $name . '<- [3/3] - updated?');
-			is ($resR, $expecMeasureR, 'Testing to update classification data with ->' . $name . '<- [3/3] - measurements');
-			is ($resDerivedR, $expecDerivedR, 'Testing to update classification data with ->' . $name . '<- [3/3] - derived measurements');
-			is ($resSeqR, $expecSeqR, 'Testing to update classification data with ->' . $name . '<- [3/3] - sequences');
-			is ($resClassR, $tmp_expecClassR, 'Testing to update classification data with ->' . $name . '<- [3/3] - classifications');
-		};
 	}
 
 	
 	#------------------------------------------------------------------------------#
-	# Attempt to remove classification data by emptying run and barcode in Excel
+	# Attempt to remove classification data by emptying run and barcode in Excel.
+	# Does not matter which classifier is used.
 	# => does not work; data is left unchanged.
 	# => id_change indicates version of data --> should not change
 	#------------------------------------------------------------------------------#	
+	my $tmp_expecChangeR = "";
 	try {
 		$err = "";
 		$resR = "";
@@ -14717,12 +15117,13 @@ sub test_class {
 		$resSeqR = "";
 		$resClassR = "";
 		$resChangeR = "";
-		$tmp_expecChangeR = "";	
 					
 		# Add Excel with run and barcode
-		qx{perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath \\
-			--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
-			--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
+		qx{export PERL5LIB="$lib"; \\
+			perl ../importSGA.pl --debug --verbose --table $files{'MetaG'}->{'testF_seq'} \\
+				--data $basePath --taxonomy $taxP --format xlsx \\
+				--whogirls ./data/spreadsheets/whogirls.xlsx --whoboys ./data/spreadsheets/whoboys.xlsx \\
+				2>&1 1>/dev/null
 		};
 		$tmp_expecChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
 			"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
@@ -14734,9 +15135,11 @@ sub test_class {
 		);
 		
 		# Attempt to remove classifications by providing Excel with empty run_bar field
-		$err = qx{perl ../importSGA.pl --debug --verbose --table $testF_noRunBar --data $basePath \\
-			--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
-			--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
+		$err = qx{export PERL5LIB="$lib"; \\
+			perl ../importSGA.pl --debug --verbose --table $testF_noRunBar \\
+				--data $basePath --taxonomy $taxP --format xlsx \\
+				--whogirls ./data/spreadsheets/whogirls.xlsx --whoboys ./data/spreadsheets/whoboys.xlsx \\
+				2>&1 1>/dev/null
 		};
 		$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
 			"s.createdby, s.iscontrol, m.value, t.name, t.type, t.selection from patient p full " .
@@ -14792,13 +15195,14 @@ sub test_class {
 		is ($resR, $expecMeasureR, 'Testing removing existing classification data does not work [1/2] - measurements');
 		is ($resDerivedR, $expecDerivedR, 'Testing removing existing classification data does not work [1/2] - derived measurements');
 		is ($resSeqR, $expecSeqR, 'Testing removing existing classification data does not work [1/2] - sequences');
-		is ($resClassR, $expecClassR, 'Testing removing existing classification data does not work [1/2] - classifications');
+		is ($resClassR, $expecs{'MetaG'}->{'expecClassR'}, 'Testing removing existing classification data does not work [1/2] - classifications');
 	};
 	
 	
 	#------------------------------------------------------------------------------#
 	# Attempt to remove classification data by providing basePath that only
-	# contains sequences and no classifications (run and barcode provided in Excel)
+	# contains sequences and no classifications (run and barcode provided in Excel).
+	# Does not matter which classifier is used.
 	# => does not work; data is left unchanged.
 	# => id_change indicates version of data --> should not change
 	#------------------------------------------------------------------------------#
@@ -14814,9 +15218,11 @@ sub test_class {
 		$tmp_expecChangeR = "";
 					
 		# Correct basePath
-		qx{perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath \\
-			--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
-			--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
+		qx{export PERL5LIB="$lib"; \\
+			perl ../importSGA.pl --debug --verbose --table $files{'MetaG'}->{'testF_seq'} \\
+			--data $basePath --taxonomy $taxP --format xlsx \\
+			--whogirls ./data/spreadsheets/whogirls.xlsx --whoboys ./data/spreadsheets/whoboys.xlsx \\
+			2>&1 1>/dev/null \\
 		};
 		$tmp_expecChangeR = $dbh->selectall_arrayref("select p.id_change, s.id_change, m.id_change, t.id_change, seq.id_change, c.id_change," .
 			"tc.id_change, tax.id_change from patient p full outer join sample s on p.id = s.id_patient full outer join measurement m " .
@@ -14828,9 +15234,11 @@ sub test_class {
 		);
 		
 		# basePath that contains no data
-		$err = qx{perl ../importSGA.pl --debug --verbose --table $testF_seq --data $basePath_mod \\
-			--format xlsx --whogirls ./data/spreadsheets/whogirls.xlsx \\
-			--whoboys ./data/spreadsheets/whoboys.xlsx 2>&1 1>/dev/null \\
+		$err = qx{export PERL5LIB="$lib"; \\
+			perl ../importSGA.pl --debug --verbose --table $files{'MetaG'}->{'testF_seq'} \\
+				--data $basePath_mod --taxonomy $taxP --format xlsx \\
+				--whogirls ./data/spreadsheets/whogirls.xlsx --whoboys ./data/spreadsheets/whoboys.xlsx \\
+				2>&1 1>/dev/null \\
 		};
 		$resR = $dbh->selectall_arrayref("select p.alias, p.accession, p.birthdate, s.createdate, " .
 			"s.createdby, s.iscontrol, m.value, t.name, t.type, t.selection from patient p full " .
@@ -14888,7 +15296,7 @@ sub test_class {
 		is ($resR, $expecMeasureR, 'Testing removing existing classification data does not work [2/2] - measurements');
 		is ($resDerivedR, $expecDerivedR, 'Testing removing existing classification data does not work [2/2] - derived measurements');
 		is ($resSeqR, $expecSeqR, 'Testing removing existing classification data does not work [2/2] - sequences');
-		is ($resClassR, $expecClassR, 'Testing removing existing classification data does not work [2/2] - classifications');
+		is ($resClassR, $expecs{'MetaG'}->{'expecClassR'}, 'Testing removing existing classification data does not work [2/2] - classifications');
 	};
 
 	
@@ -14901,6 +15309,11 @@ sub test_class {
 # Main
 #--------------------------------------------------------------------------------------------------#
 #
+# If modules for importSGA.pl cannot be be discovered in the global PERL5LIB path,
+# they cannot be found from within qx, even if this test script received an adjusted
+# local path. Thus, the current INC has to be passed on.
+my $lib = join(":", @INC);
+
 # Connect to the test database (has to be created before by user)
 my $dbh = MetagDB::Db::connectDebug();
 
@@ -14910,6 +15323,7 @@ for (my $i = 0; $i <= 30; $i++) {
 	$rand .= getLetter($int);
 }
 my $basePath = "/tmp/$rand";
+my $taxP = "data/basepath/kraken2/taxonomy";
 
 try {
 	# Create the test directory
@@ -14939,13 +15353,13 @@ try {
 	$dbh = createDB($dbh, $schema);
 	
 	print "INFO: Testing measurement related workflows\n";
-	my ($expecMeasureR, $expecDerivedR) = test_measures($dbh, $schema, $basePath);
+	my ($expecMeasureR, $expecDerivedR) = test_measures($dbh, $schema, $basePath, $lib);
 	
 	print "INFO: Testing sequence related workflows\n";
-	test_seqs($dbh, $schema, "data/basepath/org/seq", $basePath, $expecMeasureR, $expecDerivedR);
+	test_seqs($dbh, $schema, "data/basepath/org/seq", $basePath, $expecMeasureR, $expecDerivedR, $lib);
 
 	print "INFO: Testing classification related workflows\n";
-	test_class($dbh, $schema, "data/basepath/org", $basePath, $expecMeasureR, $expecDerivedR);
+	test_class($dbh, $schema, "data/basepath/org", $basePath, $expecMeasureR, $expecDerivedR, $lib, $taxP);
 	
 	$dbh = dropDB($dbh, $schema);
 }

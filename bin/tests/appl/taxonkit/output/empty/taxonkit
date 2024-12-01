@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Used to examine what happens, if the TaxonKit software returns an empty
+# output.
+
+if [ "$1" == "version" ]; then
+	echo "v0.19.0"
+else
+	printf ""
+fi

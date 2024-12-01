@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Used to examine what happens, if the TaxonKit software returns a version
+# which is lower than the required minimum.
+
+echo "v0.1"

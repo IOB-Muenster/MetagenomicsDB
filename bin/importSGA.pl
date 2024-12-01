@@ -58,6 +58,7 @@ $| = 1;
 my $tableFile = "";
 my $format = "";
 my $basePath = "";
+my $taxP = "";
 my $whoGirlsF = "";
 my $whoBoysF = "";
 my $isVerbose = 0;
@@ -80,18 +81,18 @@ USAGE
 	synchronizes the input data with it. Optionally, the program connects to a debug
 	database (service name: "debug"), instead of the production database.
 
-	./importSGA.pl --table TABLEFILE --data BASEDIR \
+	./importSGA.pl --table TABLEFILE --data BASEDIR [--taxonomy TAXDIR] \
 		[--format FORMATSTR] [--whogirls] [--whoboys] [--verbose] [--debug] [--help]
 
 			OR	
 	
-	./importSGA.pl -t TABLEFILE -d BASEDIR \
+	./importSGA.pl -tab TABLEFILE -d BASEDIR [-tax TAXDIR] \
 		[-f FORMATSTR] [--whogirls] [--whoboys] [-v] [-d] [-h]
 	
 	
 	Arguments:
 		
-		--table|-t		FILE: Relative or absolute path
+		--table|-tab	FILE: Relative or absolute path
 						to a spreadsheet (can be compressed)
 						containing the patient, sample, and
 						measurement data.
@@ -101,6 +102,13 @@ USAGE
 						the sequence and classification data.
 						The directory may be a single ZIP or TAR
 						archive (nested archives not allowed).
+						
+		--taxonomy|tax	PATH: Relative or absolute path to
+						directory with "names.dmp" and "nodes.dmp"
+						files used by the classifier specified
+						as "program" in the spreadsheet (--table).
+						Mandatory when classifier is "kraken2";
+						ignored when it is "metag".
 						
 		--format|-f		OPTIONAL: Format of the table
 						file. Must be one of "xlsx", "xls",
@@ -160,6 +168,7 @@ EOF
 GetOptions ("table=s"		=> \$tableFile,
             "data=s"		=> \$basePath,
             "format=s"		=> \$format,
+			"taxonomy:s"	=> \$taxP,
             "whogirls:s"	=> \$whoGirlsF,
             "whoboys:s"		=> \$whoBoysF,
             "verbose"		=> \$isVerbose,
@@ -222,6 +231,9 @@ if ($tableFile !~ m/^\//) {
 }
 if ($basePath !~ m/^\//) {
 	$basePath = realpath($basePath) or die "ERROR: Could not get realpath for ->$basePath<-";
+}
+if ($taxP and $taxP !~ m/^\//) {
+	$taxP = realpath($taxP) or die "ERROR: Could not get realpath for ->$taxP<-";
 }
 if ($whoGirlsF and $whoGirlsF !~ m/^\//) {
 	$whoGirlsF = realpath($whoGirlsF) or die "ERROR: Could not get realpath for ->$whoGirlsF<-";
@@ -403,7 +415,7 @@ try {
 		#-------------------------------------------------------------------------------------------------#	
 		print "DEBUG: Adding taxonomy\n" if ($isVerbose == 1);
 		$maxRows = 350;
-		(my $keysTaxR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR, $basePath, $idChange, $isNew, $maxRows);
+		(my $keysTaxR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR, $basePath, $taxP, $idChange, $isNew, $maxRows);
 		($duration, $now) = getDuration($now);
 		print "DEBUG: ->$duration<- secs\n" if ($isVerbose == 1);
 		

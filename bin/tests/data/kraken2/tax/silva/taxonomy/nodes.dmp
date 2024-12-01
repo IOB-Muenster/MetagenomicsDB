@@ -1,0 +1,20 @@
+1448	|	1385	|	class	|	-	|
+1385	|	3	|	phylum	|	-	|
+3	|	1	|	superkingdom	|	-	|
+1	|	1	|	no rank	|	-	|
+12207	|	4795	|	suborder	|	-	|
+4795	|	4432	|	order	|	-	|
+4432	|	4372	|	superorder	|	-	|
+4372	|	4307	|	infraclass	|	-	|
+4307	|	4172	|	subclass	|	-	|
+4172	|	4165	|	class	|	-	|
+4165	|	4161	|	subphylum	|	-	|
+4161	|	4154	|	phylum	|	-	|
+4154	|	4153	|	subkingdom	|	-	|
+4153	|	4152	|	kingdom	|	-	|
+4152	|	4	|	major_clade	|	-	|
+4	|	1	|	superkingdom	|	-	|
+10098	|	10083	|	genus	|	-	|
+10083	|	9629	|	phylum	|	-	|
+9629	|	8770	|	kingdom	|	-	|
+8770	|	4	|	major_clade	|	-	|

@@ -825,7 +825,8 @@ sub insertSequence ($dbh, $keysR, $basePath, $idChange, $isNew, $maxRows = 1) {
 # Insert into taxonomy relation.
 #-------------------------------------------------------------------------------------------------#
 #
-sub insertTaxonomy ($dbh, $keysSeqR, $keysSampleR, $basePath, $idChange, $isNew, $maxRows = 1) {
+sub insertTaxonomy ($dbh, $keysSeqR, $keysSampleR, $basePath, $taxP, $idChange, $isNew, $maxRows = 1) {
+	# $taxP is not needed for MetaG and can thus stay empty
 	foreach my $param ($dbh, $keysSeqR, $keysSampleR, $basePath, $idChange) {
 		die "ERROR: Not enough arguments." if (not $param or not defined $param);
 	}
@@ -844,7 +845,6 @@ sub insertTaxonomy ($dbh, $keysSeqR, $keysSampleR, $basePath, $idChange, $isNew,
 	}
 	
 	my $relation = "taxonomy";
-	my $filePattern = '.*calc\.LIN\.txt.*';
 	my @fieldNs = (
 		'name',
 		'rank',
@@ -862,10 +862,35 @@ sub insertTaxonomy ($dbh, $keysSeqR, $keysSampleR, $basePath, $idChange, $isNew,
 	my $keyC = 0;
 	foreach my $dirPattern (keys(%{$keysSeqR})) {
 		#----------------------------------------------------------------------------------#
-		# Detect files.
+		# Get the classifier ("program").
+		#----------------------------------------------------------------------------------#
+		my $classN = "";
+		foreach my $idSample (keys(%{$keysSeqR->{$dirPattern}})) {
+			die "ERROR: Sample and sequence objects not matching" if (not exists $keysSampleR->{$idSample});
+			my $tmp = $keysSampleR->{$idSample}->{'program'} || "";
+			die "ERROR: Mandatory value for program name not found" if (not $tmp);
+			die "ERROR: Multiple classifiers ->" . $tmp . "<- and ->" . $classN . "<- for the same data ->" .
+				$dirPattern . "<-" if ($classN and $tmp ne $classN);
+			$classN = $tmp;
+		}
+		
+		
+		#----------------------------------------------------------------------------------#
+		# Detect files depending on program.
 		#----------------------------------------------------------------------------------#
 		my $data = "";
 		my @files = ();
+		my $filePattern = "";
+		if ($classN =~ m/metag/i) { 
+			$filePattern = '.*calc\.LIN\.txt.*';
+		}
+		elsif ($classN =~ m/kraken2/i) {
+			die "ERROR: Taxonomy path required for ->$classN<-" if (not $taxP or not defined $taxP);
+			$filePattern = '.*kraken2.*';
+		}
+		else {
+			die "ERROR: Unknown classifier ->" . $classN . "<-";
+		}
 		
 		try {
 			@files = @{MetagDB::Helpers::findFile($basePath, $dirPattern, $filePattern)};
@@ -896,8 +921,13 @@ sub insertTaxonomy ($dbh, $keysSeqR, $keysSampleR, $basePath, $idChange, $isNew,
 		
 		# Block empty data, data just containing whitespaces.
 		# Triggers use of special taxon below.
-		if ($data and $data !~ m/^\s+$/) {
-			$taxaR = MetagDB::Taxa::parseMetaG($data, \@ranks);
+		if ($data and $data !~ m/^\s+$/) {			
+			if ($classN =~ m/metag/i){
+				$taxaR = MetagDB::Taxa::parseMetaG($data, \@ranks);
+			}
+			elsif ($classN =~ m/kraken2/i){
+				$taxaR = MetagDB::Taxa::parseKraken2($data, $taxP, \@ranks);
+			}
 		}
 		
 		my @values = ();

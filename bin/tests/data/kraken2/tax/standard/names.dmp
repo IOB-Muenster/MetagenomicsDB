@@ -1,0 +1,104 @@
+1236	|	Gammaproteobacteria Garrity et al. 2005 emend. Williams and Kelly 2013	|		|	authority	|
+1236	|	Gammaproteobacteria	|		|	scientific name	|
+1236	|	gamma proteobacteria	|		|	synonym	|
+1236	|	gamma subdivision	|		|	synonym	|
+1236	|	gamma subgroup	|		|	synonym	|
+1236	|	g-proteobacteria	|		|	blast name	|
+1236	|	Proteobacteria gamma subdivision	|		|	synonym	|
+1236	|	"Pseudomonadia" Oren et al. 2016	|		|	authority	|
+1236	|	Pseudomonadia	|		|	synonym	|
+1236	|	Purple bacteria, gamma subdivision	|		|	synonym	|
+1224	|	Alphaproteobacteriota	|		|	synonym	|
+1224	|	"Alphaproteobacteriota" Whitman et al. 2018	|		|	synonym	|
+1224	|	proteobacteria	|		|	blast name	|
+1224	|	"Proteobacteria" Garrity et al. 2005	|		|	authority	|
+1224	|	Proteobacteria Stackebrandt et al. 1988	|		|	authority	|
+1224	|	Proteobacteria	|		|	synonym	|
+1224	|	"Proteobacteriota" Panda et al. 2022	|		|	authority	|
+1224	|	Proteobacteriota	|		|	synonym	|
+1224	|	Pseudomonadota corrig. Garrity et al. 2021	|		|	authority	|
+1224	|	Pseudomonadota	|		|	scientific name	|
+1224	|	purple photosynthetic bacteria and relatives	|		|	common name	|
+2	|	Bacteria	|	Bacteria <bacteria>	|	scientific name	|
+2	|	bacteria	|		|	blast name	|
+2	|	"Bacteria" Cavalier-Smith 1987	|		|	authority	|
+2	|	Bacteria (ex Cavalier-Smith 1987)	|		|	synonym	|
+2	|	Bacteria Woese et al. 2024	|		|	synonym	|
+2	|	"Bacteriobiota" Luketa 2012	|		|	authority	|
+2	|	Bacteriobiota	|		|	synonym	|
+2	|	eubacteria	|		|	genbank common name	|
+2	|	Monera	|	Monera <bacteria>	|	in-part	|
+2	|	Procaryotae	|	Procaryotae <bacteria>	|	in-part	|
+2	|	Prokaryotae	|	Prokaryotae <bacteria>	|	in-part	|
+2	|	Prokaryota	|	Prokaryota <bacteria>	|	in-part	|
+2	|	prokaryote	|	prokaryote <bacteria>	|	in-part	|
+2	|	prokaryotes	|	prokaryotes <bacteria>	|	in-part	|
+131567	|	biota	|		|	synonym	|
+131567	|	cellular organisms	|		|	scientific name	|
+1	|	all	|		|	synonym	|
+1	|	root	|		|	scientific name	|
+81378	|	Percopsoidei	|		|	scientific name	|
+81377	|	Percopsiformes	|		|	scientific name	|
+81377	|	trout-perches and others	|		|	genbank common name	|
+1489840	|	Percopsaria	|		|	scientific name	|
+1489838	|	Paracanthomorphacea	|		|	synonym	|
+1489838	|	Paracanthopterygii	|		|	scientific name	|
+123368	|	Acanthomorpha	|		|	synonym	|
+123368	|	Acanthomorphata	|		|	scientific name	|
+123367	|	Ctenosquamata	|		|	scientific name	|
+123366	|	Eurypterygia	|		|	scientific name	|
+123366	|	Eurypterygii	|		|	synonym	|
+123365	|	Neoteleostei	|		|	scientific name	|
+1489388	|	Euteleosteomorpha	|		|	scientific name	|
+186625	|	Clupeocephala	|		|	scientific name	|
+1489341	|	Osteoglossocephalai	|		|	scientific name	|
+32443	|	Teleostei	|		|	scientific name	|
+32443	|	teleost fishes	|		|	genbank common name	|
+41665	|	Neopterygii	|		|	scientific name	|
+41665	|	Neopterygi	|		|	synonym	|
+186623	|	Actinopteri	|		|	scientific name	|
+7898	|	Actinopterygii	|		|	scientific name	|
+7898	|	Actinopterygi	|		|	synonym	|
+7898	|	bony fishes	|		|	blast name	|
+7898	|	fishes	|	fishes <bony fishes>	|	common name	|
+7898	|	fish	|	fish <bony fishes>	|	common name	|
+7898	|	Osteichthyes	|	Osteichthyes <bony fishes>	|	in-part	|
+7898	|	ray-finned fishes	|		|	genbank common name	|
+117570	|	Teleostomi	|		|	scientific name	|
+117571	|	bony vertebrates	|		|	genbank common name	|
+117571	|	Euteleostomi	|		|	scientific name	|
+7776	|	Gnathostomata	|	Gnathostomata <vertebrates>	|	scientific name	|
+7776	|	jawed vertebrates	|		|	genbank common name	|
+7742	|	Vertebrata Cuvier, 1812	|		|	authority	|
+7742	|	Vertebrata	|	Vertebrata <vertebrates>	|	scientific name	|
+7742	|	vertebrates	|	vertebrates <blast name>	|	blast name	|
+7742	|	vertebrates	|	vertebrates <genbank common name>	|	genbank common name	|
+89593	|	Craniata	|	Craniata <chordates>	|	scientific name	|
+7711	|	Chordata	|		|	scientific name	|
+7711	|	chordates	|	chordates <blast name>	|	blast name	|
+7711	|	chordates	|	chordates <genbank common name>	|	genbank common name	|
+33511	|	deuterostomes	|		|	common name	|
+33511	|	Deuterostomia	|		|	scientific name	|
+33213	|	Bilateria	|		|	scientific name	|
+6072	|	Eumetazoa	|		|	scientific name	|
+33208	|	Animalia	|		|	synonym	|
+33208	|	animals	|		|	blast name	|
+33208	|	metazoans	|		|	genbank common name	|
+33208	|	Metazoa	|		|	scientific name	|
+33208	|	multicellular animals	|		|	common name	|
+33154	|	Fungi/Metazoa group	|		|	synonym	|
+33154	|	Opisthokonta Cavalier-Smith 1987	|		|	authority	|
+33154	|	Opisthokonta	|		|	scientific name	|
+33154	|	opisthokonts	|		|	synonym	|
+2759	|	Eucarya	|		|	synonym	|
+2759	|	Eucaryotae	|		|	synonym	|
+2759	|	eucaryotes	|		|	genbank common name	|
+2759	|	Eukarya	|		|	synonym	|
+2759	|	Eukaryotae	|		|	synonym	|
+2759	|	Eukaryota	|		|	scientific name	|
+2759	|	eukaryotes	|	eukaryotes <blast name>	|	blast name	|
+2759	|	eukaryotes	|	eukaryotes <common name>	|	common name	|
+104612	|	soil isolate KBS-EC1	|		|	scientific name	|
+150480	|	soil isolate KBS ensemble	|		|	scientific name	|
+48479	|	environmental samples	|	environmental samples <bacteria,superkingdom Bacteria>	|	scientific name	|
+48479	|	Eubacteria environmental samples	|		|	synonym	|

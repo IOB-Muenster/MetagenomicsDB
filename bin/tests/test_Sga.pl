@@ -4545,6 +4545,7 @@ sub test_insertSequence {
 sub test_insertTaxonomy {
 	my $dbh = $_[0] // "";
 	my $basePath = $_[1] // "";
+	my $taxP = $_[2] // "";
 	
 	# 2 patients --> 4 samples per patient --> 2 reads per sample:
 	# directory pattern => id_sample => read ID => id_sequence
@@ -4598,7 +4599,7 @@ sub test_insertTaxonomy {
 			}
 		}
 	};
-	my $keysSampleR = {
+	my $keysSampleMetaGR = {
 		"1"	=> { # p1: 1900-01-01
 			'number of run and barcode'	=> 'run01_bar01',
 			'height'					=> '30cm',
@@ -4656,6 +4657,10 @@ sub test_insertTaxonomy {
 			'database'					=> 'RDP'
 		}
 	};
+	my $keysSampleKraken2R = dclone($keysSampleMetaGR);
+	foreach my $id (keys(%{$keysSampleKraken2R})) {
+		$keysSampleKraken2R->{$id}->{'program'} = "Kraken2"
+	}
 	
 	my $outKeysR = {};
 	my $idChange = 1;
@@ -4666,7 +4671,8 @@ sub test_insertTaxonomy {
 	
 	#------------------------------------------------------------------------------#
 	# Test no database handle (+ no foreign seq keys + no foreign sample keys
-	#  + no dir path + no id_change + no indication, if new data + no maxRows)
+	# + no dir path + no taxonomy path + no id_change + no indication, if new data
+	# + no maxRows)
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
@@ -4682,7 +4688,7 @@ sub test_insertTaxonomy {
 
 	#------------------------------------------------------------------------------#
 	# Test no foreign seq keys (+ no foreign sample keys + no dir path
-	# + no id_change + no indication, if new data + no maxRows)
+	# + no taxonomy path + no id_change + no indication, if new data + no maxRows)
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
@@ -4697,7 +4703,7 @@ sub test_insertTaxonomy {
 	
 	
 	#------------------------------------------------------------------------------#
-	# Test no foreing sample keys (+ no dir path + no id_change
+	# Test no foreing sample keys (+ no dir path + no taxonomy path + no id_change 
 	# + no indication, if new data + no maxRows)
 	#------------------------------------------------------------------------------#
 	try {
@@ -4713,11 +4719,12 @@ sub test_insertTaxonomy {
 	
 		
 	#------------------------------------------------------------------------------#
-	# Test no dir path (+ no id_change + no indication, if new data + no maxRows)
+	# Test no dir path (no taxonomy path + no id_change
+	# + no indication, if new data + no maxRows)
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
-		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR)
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR)
 	}
 	catch {
 		$err = $_;
@@ -4728,11 +4735,27 @@ sub test_insertTaxonomy {
 	
 	
 	#------------------------------------------------------------------------------#
+	# Test no taxonomy path (+ no id_change + no indication, if new data
+	# + no maxRows)
+	#------------------------------------------------------------------------------#
+	try {
+		$err = "";
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR, $basePath)
+	}
+	catch {
+		$err = $_;
+	}
+	finally {
+		ok ($err =~ m/Too few arguments/, 'Testing no taxonomy path');
+	};
+	
+	
+	#------------------------------------------------------------------------------#
 	# Test no id_change (+ no indication, if new data + no maxRows)
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
-		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR, $basePath)
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR, $basePath, $taxP)
 	}
 	catch {
 		$err = $_;
@@ -4747,7 +4770,7 @@ sub test_insertTaxonomy {
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
-		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR, $basePath, $idChange)
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR, $basePath, $taxP, $idChange)
 	}
 	catch {
 		$err = $_;
@@ -4758,13 +4781,13 @@ sub test_insertTaxonomy {
 	
 	
 	#------------------------------------------------------------------------------#
-	# Test no maxRows => optional argument
+	# Test no maxRows with MetaG => optional argument
 	#------------------------------------------------------------------------------#
 	$isNew = 0;
 	
 	# Create taxonomy files
 	# path => content
-	my %taxFiles = (
+	my %taxFilesMetaG = (
 		'run01_bar01/a'			=>	">a\n" .
 										"domain: d_a: 1 (1)\n" .
 										"phylum: p_a: 1 (1)\n" .
@@ -4875,7 +4898,7 @@ sub test_insertTaxonomy {
 		'run04_bar99/h_1'		=>	"No match for h_1\n",
 	);
 	
-	my %expecs = (
+	my %expecsMetaG = (
 		"d_a_domain" => {
 			'_id_sequence_' => {
 				'1' => ['MetaG', 'RDP']
@@ -5546,10 +5569,10 @@ sub test_insertTaxonomy {
 			},
 			'_id_taxonomy_' => undef
 		}
-	);
-	my @tmps = sort {$a cmp $b} keys(%expecs);
+	);	
+	my @tmps = sort {$a cmp $b} keys(%expecsMetaG);
 	# Add idChange
-	my @expecsData = map {$_, $idChange} @tmps;
+	my @expecsDataMetaG = map {$_, $idChange} @tmps;
 	
 	try {
 		$err = "";
@@ -5601,7 +5624,7 @@ sub test_insertTaxonomy {
 		
 		system("mkdir $basePath/classifications") and die "ERROR: Could not create directory in /tmp";
 		my %dirs = ();
-		foreach my $path (keys(%taxFiles)) {
+		foreach my $path (keys(%taxFilesMetaG)) {
 			my ($dir, $file) = split('/', $path);
 			
 			# Create two zipped files per directory, but only attempt to create the directory once.
@@ -5610,31 +5633,170 @@ sub test_insertTaxonomy {
 				$dirs{$dir} = undef;
 			}
 			
-			zip \$taxFiles{$path} => "$basePath/classifications/$path" . "_calc.LIN.txt.zip" , AutoClose=> 1, Name => $file ."_calc.LIN.txt";
+			zip \$taxFilesMetaG{$path} => "$basePath/classifications/$path" . "_calc.LIN.txt.zip" , AutoClose=> 1, Name => $file ."_calc.LIN.txt";
 		}
 		
-		($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR, $basePath, $idChange, $isNew);
+		($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR, $basePath, $taxP, $idChange, $isNew);
 		
 		# Get the inserted data from the database
 		my $resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id_change FROM taxonomy ORDER BY key ASC");
 		my @res = map {$_->[0], $_->[1]} @{$resR};
-		is (\@res, \@expecsData, 'Testing no maxRows - data');
+		is (\@res, \@expecsDataMetaG, 'Testing no maxRows with MetaG - data');
 		
 		# Get name_rank and id from database and update
 		# _id_taxonomy_ in %expecs
 		$resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id FROM taxonomy");
 		foreach my $rowR (@{$resR}) {
 			my ($key, $id) = @{$rowR};
-			$expecs{$key}->{'_id_taxonomy_'} = $id
+			$expecsMetaG{$key}->{'_id_taxonomy_'} = $id
 		}
 		# Compare to keysR
-		is ($outKeysR, \%expecs, 'Testing no maxRows - keys');
-		is ($isNew, 1, 'Testing no maxRows - any new data inserted?');
+		is ($outKeysR, \%expecsMetaG, 'Testing no maxRows with MetaG - keys');
+		is ($isNew, 1, 'Testing no maxRows with MetaG - any new data inserted?');
 	}
 	catch {
 		$err = $_;
 		
-		ok(1==2, 'Testing no maxRows');
+		ok(1==2, 'Testing no maxRows with MetaG');
+		print "ERROR: $err" . "\n";
+	}
+	finally {
+		$dbh->rollback;
+	};
+	
+	
+	#------------------------------------------------------------------------------#
+	# Test no maxRows with Kraken2 => optional argument
+	#------------------------------------------------------------------------------#
+	$isNew = 0;
+	
+	# Create taxonomy files
+	# path => content
+	my %taxFilesKraken2 = (
+		'run01_bar01/a'			=>	"C	a	2	1	2:1\n",
+		'run01_bar01/a_1'		=>	"C	a_1	12	1	12:1\n",
+		'run01_bar99/b'			=>	"C	b	22	2	22:1\n",
+		'run01_bar99/b_1'		=>	"C	b_1	32	2	32:1\n",
+		'run02_bar01/c'			=>	"C	c	42	3	42:1\n",
+		'run02_bar01/c_1'		=>	"C	c_1	52	3	52:1\n",
+		'run02_bar99/d'			=>	"C	d	62	4	62:1\n",
+		'run02_bar99/d_1'		=>	"C	d_1	72	4	72:1\n",
+		'run03_bar01/e'			=>	"C	e	82	5	82:1\n",
+		'run03_bar01/e_1'		=>	"C	e_1	85	5	85:1\n",
+		'run03_bar99/f'			=>	"C	f	88	6	88:1\n",
+		'run03_bar99/f_1'		=>	"C	f_1	91	6	91:1\n",
+		'run04_bar01/g'			=>	"U	g	0	7	0:1\n",
+		'run04_bar01/g_1'		=>	"U	g_1	0	7	0:1\n",
+		'run04_bar99/h'			=>	"U	h	0	8	0:1\n",
+		'run04_bar99/h_1'		=>	"U	h_1	0	8	0:1\n"
+	);
+	
+	my $expecsKraken2R = dclone(\%expecsMetaG);
+	my %expecsKraken2 = %{$expecsKraken2R};
+	foreach my $class (keys (%expecsKraken2)) {
+		foreach my $id (keys (%{$expecsKraken2{$class}->{'_id_sequence_'}})) {
+			$expecsKraken2{$class}->{'_id_sequence_'}->{$id}->[0] = "Kraken2";
+		}
+	}
+	# Kraken2 classification may not contain a taxon with no name at the last rank
+	delete $expecsKraken2{"_class"};
+	$expecsKraken2{"c_f_1_class"}  = {
+		'_id_sequence_' => {
+			'12' => ['Kraken2', 'RDP']
+		},
+		'_id_taxonomy_' => undef
+	};
+	
+	@tmps = sort {$a cmp $b} keys(%expecsKraken2);
+	# Add idChange
+	my @expecsDataKraken2 = map {$_, $idChange} @tmps;
+	
+	try {
+		$err = "";
+		
+		# Create the necessary records
+		$dbh->do ("INSERT INTO change (id, username, ts, ip) VALUES ($idChange, 'foo', 1234, 12345678)");
+		$dbh->do("INSERT INTO patient (id, alias, accession, birthdate, id_change) VALUES (1, 'p1', '00001', '1900-01-01', $idChange)");
+		$dbh->do("INSERT INTO patient (id, alias, accession, birthdate, id_change) VALUES (2, 'p2', '00002', '1900-02-02', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (1, 1, '1900-01-01', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (2, 1, '1900-01-01', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (3, 1, '1900-01-02', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (4, 1, '1900-01-02', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (5, 2, '1900-02-02', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (6, 2, '1900-02-02', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (7, 2, '1900-02-03', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (8, 2, '1900-02-03', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(1, 1, 'r1', 'b1', 'A', '!', 'f1', 'a', 'm1', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(2, 1, 'r1', 'b1', 'A', '!', 'f1', 'a_1', 'm1', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(3, 2, 'r2', 'b2', 'AA', '!!', 'f2', 'b', 'm2', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(4, 2, 'r2', 'b2', 'AA', '!!', 'f2', 'b_1', 'm2', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(5, 3, 'r3', 'b3', 'AAA', '!!!', 'f3', 'c', 'm3', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(6, 3, 'r3', 'b3', 'AAA', '!!!', 'f3', 'c_1', 'm3', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(7, 4, 'r4', 'b4', 'AAAA', '!!!!', 'f4', 'd', 'm4', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(8, 4, 'r4', 'b4', 'AAAA', '!!!!', 'f4', 'd_1', 'm4', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(9, 5, 'r5', 'b5', 'AAAAA', '!!!!!', 'f5', 'e', 'm5', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(10, 5, 'r5', 'b5', 'AAAAA', '!!!!!', 'f5', 'e_1', 'm5', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(11, 6, 'r6', 'b6', 'AAAAAA', '!!!!!!', 'f6', 'f', 'm6', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(12, 6, 'r6', 'b6', 'AAAAAA', '!!!!!!', 'f6', 'f_1', 'm6', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(13, 7, 'r7', 'b7', 'AAAAAAA', '!!!!!!!', 'f7', 'g', 'm7', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(14, 7, 'r7', 'b7', 'AAAAAAA', '!!!!!!!', 'f7', 'g_1', 'm7', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(15, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h', 'm8', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(16, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h_1', 'm8', $idChange)");
+		
+		# The name of the classification directory must not contain the term kraken2. Otherwise, any file in it
+		# is recognized as a classification file.
+		system("mkdir $basePath/classifications_k2") and die "ERROR: Could not create directory in /tmp";
+		my %dirs = ();
+		foreach my $path (keys(%taxFilesKraken2)) {
+			my ($dir, $file) = split('/', $path);
+			
+			# Create two zipped files per directory, but only attempt to create the directory once.
+			if (not exists $dirs{$dir}) {
+				system ("mkdir $basePath/classifications_k2/$dir") and die "ERROR: Could not create directory in /tmp";
+				$dirs{$dir} = undef;
+			}
+			
+			zip \$taxFilesKraken2{$path} => "$basePath/classifications_k2/$path" . "_kraken2.zip" , AutoClose=> 1, Name => $file ."_kraken2";
+		}
+		
+		($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleKraken2R, $basePath, $taxP, $idChange, $isNew);
+		
+		# Get the inserted data from the database
+		my $resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id_change FROM taxonomy ORDER BY key ASC");
+		my @res = map {$_->[0], $_->[1]} @{$resR};
+		is (\@res, \@expecsDataKraken2, 'Testing no maxRows with Kraken2 - data');
+		
+		# Get name_rank and id from database and update
+		# _id_taxonomy_ in %expecs
+		$resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id FROM taxonomy");
+		foreach my $rowR (@{$resR}) {
+			my ($key, $id) = @{$rowR};
+			$expecsKraken2{$key}->{'_id_taxonomy_'} = $id
+		}
+		# Compare to keysR
+		is ($outKeysR, \%expecsKraken2, 'Testing no maxRows with Kraken2 - keys');
+		is ($isNew, 1, 'Testing no maxRows with Kraken2 - any new data inserted?');
+	}
+	catch {
+		$err = $_;
+		
+		ok(1==2, 'Testing no maxRows with Kraken2');
 		print "ERROR: $err" . "\n";
 	}
 	finally {
@@ -5647,7 +5809,7 @@ sub test_insertTaxonomy {
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
-		MetagDB::Sga::insertTaxonomy("", $keysSeqR, $keysSampleR, $basePath, $idChange, $isNew, $maxRows)
+		MetagDB::Sga::insertTaxonomy("", $keysSeqR, $keysSampleMetaGR, $basePath, $taxP, $idChange, $isNew, $maxRows)
 	}
 	catch {
 		$err = $_;
@@ -5662,7 +5824,7 @@ sub test_insertTaxonomy {
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
-		MetagDB::Sga::insertTaxonomy($dbh, "", $keysSampleR, $basePath, $idChange, $isNew, $maxRows)
+		MetagDB::Sga::insertTaxonomy($dbh, "", $keysSampleMetaGR, $basePath, $taxP, $idChange, $isNew, $maxRows)
 	}
 	catch {
 		$err = $_;
@@ -5677,7 +5839,7 @@ sub test_insertTaxonomy {
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
-		MetagDB::Sga::insertTaxonomy($dbh, "abc", $keysSampleR, $basePath, $idChange, $isNew, $maxRows)
+		MetagDB::Sga::insertTaxonomy($dbh, "abc", $keysSampleMetaGR, $basePath, $taxP, $idChange, $isNew, $maxRows)
 	}
 	catch {
 		$err = $_;
@@ -5692,7 +5854,7 @@ sub test_insertTaxonomy {
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
-		MetagDB::Sga::insertTaxonomy($dbh, {}, $keysSampleR, $basePath, $idChange, $isNew, $maxRows)
+		MetagDB::Sga::insertTaxonomy($dbh, {}, $keysSampleMetaGR, $basePath, $taxP, $idChange, $isNew, $maxRows)
 	}
 	catch {
 		$err = $_;
@@ -5707,7 +5869,7 @@ sub test_insertTaxonomy {
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
-		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, "", $basePath, $idChange, $isNew, $maxRows)
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, "", $basePath, $taxP, $idChange, $isNew, $maxRows)
 	}
 	catch {
 		$err = $_;
@@ -5722,7 +5884,7 @@ sub test_insertTaxonomy {
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
-		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, "abc", $basePath, $idChange, $isNew, $maxRows)
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, "abc", $basePath, $taxP, $idChange, $isNew, $maxRows)
 	}
 	catch {
 		$err = $_;
@@ -5737,7 +5899,7 @@ sub test_insertTaxonomy {
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
-		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, {}, $basePath, $idChange, $isNew, $maxRows)
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, {}, $basePath, $taxP, $idChange, $isNew, $maxRows)
 	}
 	catch {
 		$err = $_;
@@ -5752,7 +5914,7 @@ sub test_insertTaxonomy {
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
-		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR, "", $idChange, $isNew, $maxRows)
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR, "", $taxP, $idChange, $isNew, $maxRows)
 	}
 	catch {
 		$err = $_;
@@ -5763,11 +5925,107 @@ sub test_insertTaxonomy {
 	
 	
 	#------------------------------------------------------------------------------#
+	# Test empty taxonomy path with MetaG (allowed)
+	#------------------------------------------------------------------------------#
+	$isNew = 0;
+	
+	try {
+		$err = "";
+		
+		# Create the necessary records
+		$dbh->do ("INSERT INTO change (id, username, ts, ip) VALUES ($idChange, 'foo', 1234, 12345678)");
+		$dbh->do("INSERT INTO patient (id, alias, accession, birthdate, id_change) VALUES (1, 'p1', '00001', '1900-01-01', $idChange)");
+		$dbh->do("INSERT INTO patient (id, alias, accession, birthdate, id_change) VALUES (2, 'p2', '00002', '1900-02-02', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (1, 1, '1900-01-01', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (2, 1, '1900-01-01', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (3, 1, '1900-01-02', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (4, 1, '1900-01-02', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (5, 2, '1900-02-02', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (6, 2, '1900-02-02', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (7, 2, '1900-02-03', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (8, 2, '1900-02-03', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(1, 1, 'r1', 'b1', 'A', '!', 'f1', 'a', 'm1', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(2, 1, 'r1', 'b1', 'A', '!', 'f1', 'a_1', 'm1', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(3, 2, 'r2', 'b2', 'AA', '!!', 'f2', 'b', 'm2', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(4, 2, 'r2', 'b2', 'AA', '!!', 'f2', 'b_1', 'm2', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(5, 3, 'r3', 'b3', 'AAA', '!!!', 'f3', 'c', 'm3', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(6, 3, 'r3', 'b3', 'AAA', '!!!', 'f3', 'c_1', 'm3', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(7, 4, 'r4', 'b4', 'AAAA', '!!!!', 'f4', 'd', 'm4', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(8, 4, 'r4', 'b4', 'AAAA', '!!!!', 'f4', 'd_1', 'm4', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(9, 5, 'r5', 'b5', 'AAAAA', '!!!!!', 'f5', 'e', 'm5', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(10, 5, 'r5', 'b5', 'AAAAA', '!!!!!', 'f5', 'e_1', 'm5', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(11, 6, 'r6', 'b6', 'AAAAAA', '!!!!!!', 'f6', 'f', 'm6', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(12, 6, 'r6', 'b6', 'AAAAAA', '!!!!!!', 'f6', 'f_1', 'm6', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(13, 7, 'r7', 'b7', 'AAAAAAA', '!!!!!!!', 'f7', 'g', 'm7', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(14, 7, 'r7', 'b7', 'AAAAAAA', '!!!!!!!', 'f7', 'g_1', 'm7', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(15, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h', 'm8', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(16, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h_1', 'm8', $idChange)");		
+		($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR, $basePath, $taxP, $idChange, $isNew);
+		
+		# Get the inserted data from the database
+		my $resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id_change FROM taxonomy ORDER BY key ASC");
+		my @res = map {$_->[0], $_->[1]} @{$resR};
+		is (\@res, \@expecsDataMetaG, 'Testing empty taxonomy path with MetaG - data');
+		
+		# Get name_rank and id from database and update
+		# _id_taxonomy_ in %expecs
+		$resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id FROM taxonomy");
+		foreach my $rowR (@{$resR}) {
+			my ($key, $id) = @{$rowR};
+			$expecsMetaG{$key}->{'_id_taxonomy_'} = $id
+		}
+		# Compare to keysR
+		is ($outKeysR, \%expecsMetaG, 'Testing empty taxonomy path with MetaG - keys');
+		is ($isNew, 1, 'Testing empty taxonomy path with MetaG - any new data inserted?');
+	}
+	catch {
+		$err = $_;
+		
+		ok(1==2, 'Testing empty taxonomy path with MetaG');
+		print "ERROR: $err" . "\n";
+	}
+	finally {
+		$dbh->rollback;
+	};
+	
+	
+	#------------------------------------------------------------------------------#
+	# Test empty taxonomy path with Kraken2 (not allowed)
+	#------------------------------------------------------------------------------#
+	try {
+		$err = "";
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleKraken2R, $basePath, "", $idChange, $isNew, $maxRows)
+	}
+	catch {
+		$err = $_;
+	}
+	finally {
+		ok ($err =~ m/ERROR.*Taxonomy path required for/, 'Testing empty taxonomy path with Kraken2');
+	};
+	
+	
+	#------------------------------------------------------------------------------#
 	# Test empty id_change
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
-		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR, $basePath, "", $isNew, $maxRows)
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR, $basePath, $taxP, "", $isNew, $maxRows)
 	}
 	catch {
 		$err = $_;
@@ -5782,7 +6040,7 @@ sub test_insertTaxonomy {
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
-		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR, $basePath, $idChange, "", $maxRows)
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR, $basePath, $taxP, $idChange, "", $maxRows)
 	}
 	catch {
 		$err = $_;
@@ -5797,7 +6055,7 @@ sub test_insertTaxonomy {
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
-		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR, $basePath, $idChange, "abc", $maxRows)
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR, $basePath, $taxP, $idChange, "abc", $maxRows)
 	}
 	catch {
 		$err = $_;
@@ -5812,7 +6070,7 @@ sub test_insertTaxonomy {
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
-		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR, $basePath, $idChange, 2, $maxRows)
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR, $basePath, $taxP, $idChange, 2, $maxRows)
 	}
 	catch {
 		$err = $_;
@@ -5827,7 +6085,7 @@ sub test_insertTaxonomy {
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
-		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR, $basePath, $idChange, $isNew, "")
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR, $basePath, $taxP, $idChange, $isNew, "")
 	}
 	catch {
 		$err = $_;
@@ -5842,7 +6100,7 @@ sub test_insertTaxonomy {
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
-		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR, $basePath, $idChange, $isNew, "abc")
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR, $basePath, $taxP, $idChange, $isNew, "abc")
 	}
 	catch {
 		$err = $_;
@@ -5857,7 +6115,7 @@ sub test_insertTaxonomy {
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
-		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR, $basePath, $idChange, $isNew, 0)
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR, $basePath, $taxP, $idChange, $isNew, 0)
 	}
 	catch {
 		$err = $_;
@@ -5880,7 +6138,7 @@ sub test_insertTaxonomy {
 			# Redirect STDERR from function to suppress warnings.
 	    	local *STDERR;
 	    	open STDERR, ">", "/dev/null";
-			($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR, $tmpBase, $idChange, $isNew, $maxRows);
+			($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR, $tmpBase, $taxP, $idChange, $isNew, $maxRows);
 		}
 		
 		# Prove that no data was inserted
@@ -5914,7 +6172,7 @@ sub test_insertTaxonomy {
 			$keysSeqModR->{$dir} = undef;
 		}
 		
-		($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqModR, $keysSampleR, $basePath, $idChange, $isNew, $maxRows);
+		($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqModR, $keysSampleMetaGR, $basePath, $taxP, $idChange, $isNew, $maxRows);
 		
 		# Prove that no data was inserted
 		my $resR = $dbh->selectall_arrayref("SELECT id FROM taxonomy");
@@ -5926,6 +6184,33 @@ sub test_insertTaxonomy {
 		$err = $_;
 	}
 	finally {
+		$dbh->rollback;
+	};
+	
+	
+	#------------------------------------------------------------------------------#
+	# Test idSample in $keysSeqR->{$dirPattern} and in $keysSampleR not matching
+	#------------------------------------------------------------------------------#
+	$isNew = 0;	
+		
+	try {
+		$err = "";
+
+		my $keysSeqModR = {
+			'run01_bar01' => {
+				99 => {
+					'a' => 1,
+					'a_1' => 2
+				}
+			}
+		};
+		($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqModR, $keysSampleMetaGR, $basePath, $taxP, $idChange, $isNew, $maxRows);
+	}
+	catch {
+		$err = $_;
+	}
+	finally {
+		ok ($err =~ m/ERROR.*Sample and sequence objects not matching/, 'Testing sample IDs not matching');
 		$dbh->rollback;
 	};
 	
@@ -5948,7 +6233,7 @@ sub test_insertTaxonomy {
 			}
 		}
 		
-		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqModR, $keysSampleR, $basePath, $idChange, $isNew, $maxRows);
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqModR, $keysSampleMetaGR, $basePath, $taxP, $idChange, $isNew, $maxRows);
 	}
 	catch {
 		$err = $_;
@@ -5977,7 +6262,7 @@ sub test_insertTaxonomy {
 			}
 		}
 		
-		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqModR, $keysSampleR, $basePath, $idChange, $isNew, $maxRows);
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqModR, $keysSampleMetaGR, $basePath, $taxP, $idChange, $isNew, $maxRows);
 	}
 	catch {
 		$err = $_;
@@ -6006,7 +6291,7 @@ sub test_insertTaxonomy {
 			}
 		}
 		
-		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqModR, $keysSampleR, $basePath, $idChange, $isNew, $maxRows);
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqModR, $keysSampleMetaGR, $basePath, $taxP, $idChange, $isNew, $maxRows);
 	}
 	catch {
 		$err = $_;
@@ -6015,11 +6300,165 @@ sub test_insertTaxonomy {
 		ok($err =~ m/Value for ->id_sequence<- missing or invalid/, "Testing unexpected value for id_sequence in keys");
 		$dbh->rollback;
 	};
+	
+	
+	#------------------------------------------------------------------------------#
+	# Test no program in keysSampleR
+	#------------------------------------------------------------------------------#
+	$isNew = 0;	
+		
+	try {
+		$err = "";
+		
+		my $keysSampleModR = {
+			1	=> { # p1: 1900-01-01
+				'number of run and barcode'	=> 'run01_bar01',
+				'height'					=> '30cm',
+				'_isControl_'				=> "f",
+				'database'					=> 'RDP'
+			}	
+		};
+		my $keysSeqModR = {
+			'run01_bar01'	=> {
+				1 => {
+					'a' => 1,
+					'a_1' => 2
+				}
+			}
+		};			
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqModR, $keysSampleModR, $basePath, $taxP, $idChange, $isNew, $maxRows);
+	}
+	catch {
+		$err = $_;
+	}
+	finally {
+		ok($err =~ m/ERROR.*Mandatory value for program name not found/, "Testing no program in sample keys");
+		$dbh->rollback;
+	};
+	
+	
+	#------------------------------------------------------------------------------#
+	# Test empty program name in keysSampleR
+	#------------------------------------------------------------------------------#
+	$isNew = 0;	
+		
+	try {
+		$err = "";
+		
+		my $keysSampleModR = {
+			1	=> { # p1: 1900-01-01
+				'number of run and barcode'	=> 'run01_bar01',
+				'height'					=> '30cm',
+				'_isControl_'				=> "f",
+				'program'					=> "",
+				'database'					=> 'RDP'
+			}	
+		};
+		my $keysSeqModR = {
+			'run01_bar01'	=> {
+				1 => {
+					'a' => 1,
+					'a_1' => 2
+				}
+			}
+		};			
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqModR, $keysSampleModR, $basePath, $taxP, $idChange, $isNew, $maxRows);
+	}
+	catch {
+		$err = $_;
+	}
+	finally {
+		ok($err =~ m/ERROR.*Mandatory value for program name not found/, "Testing empty program name in sample keys");
+		$dbh->rollback;
+	};
+	
+	
+	#------------------------------------------------------------------------------#
+	# Test unexpected program in keysSampleR
+	#------------------------------------------------------------------------------#
+	$isNew = 0;	
+		
+	try {
+		$err = "";
+		
+		my $keysSampleModR = {
+			1	=> { # p1: 1900-01-01
+				'number of run and barcode'	=> 'run01_bar01',
+				'height'					=> '30cm',
+				'_isControl_'				=> "f",
+				'program'					=> "WindowsXP",
+				'database'					=> 'RDP'
+			}	
+		};
+		my $keysSeqModR = {
+			'run01_bar01'	=> {
+				1 => {
+					'a' => 1,
+					'a_1' => 2
+				}
+			}
+		};	
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqModR, $keysSampleModR, $basePath, $taxP, $idChange, $isNew, $maxRows);
+	}
+	catch {
+		$err = $_;
+	}
+	finally {
+		ok($err =~ m/ERROR.*Unknown classifier/, "Testing unexpected program in sample keys");
+		$dbh->rollback;
+	};
+	
+	
+	#------------------------------------------------------------------------------#
+	# Multiple programs in keysSampleR for a single number of run and barcode
+	#------------------------------------------------------------------------------#
+	$isNew = 0;	
+		
+	try {
+		$err = "";
+		
+		my $keysSampleModR = {
+			1	=> { # p1: 1900-01-01
+				'number of run and barcode'	=> 'run01_bar01',
+				'height'					=> '30cm',
+				'_isControl_'				=> "f",
+				'program'					=> "MetaG",
+				'database'					=> 'RDP'
+			},
+			2	=> { # p1: 1900-01-01
+				'number of run and barcode'	=> 'run01_bar01',
+				'height'					=> '30cm',
+				'_isControl_'				=> "f",
+				'program'					=> "Kraken2",
+				'database'					=> 'RDP'
+			}	
+		};
+		my $keysSeqModR = {
+			'run01_bar01'	=> {
+				1 => {
+					'a' => 1,
+					'a_1' => 2
+				},
+				2 => {
+					'a' => 1,
+					'a_1' => 2
+				}
+			}
+		};	
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqModR, $keysSampleModR, $basePath, $taxP, $idChange, $isNew, $maxRows);
+	}
+	catch {
+		$err = $_;
+	}
+	finally {
+		ok($err =~ m/ERROR.*Multiple classifiers.*for the same data/, "Testing multiple programs for same data");
+		$dbh->rollback;
+	};
 
 
 	#------------------------------------------------------------------------------#
-	# Valid insert: Two valid taxonomy ZIP archives per sample (exemplary for
-	# other archive types, see tests for extractArchive)
+	# Valid insert for MetaG: Two valid taxonomy ZIP archives per sample
+	# (exemplary for other archive types, see tests for extractArchive)
 	# Includes: NULL values for taxon. Duplicates within INSERT (UNMATCHED).
 	#------------------------------------------------------------------------------#
 	$isNew = 0;
@@ -6071,29 +6510,29 @@ sub test_insertTaxonomy {
 			"(15, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h', 'm8', $idChange)");
 		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
 			"(16, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h_1', 'm8', $idChange)");
-		($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR, $basePath, $idChange, $isNew, $maxRows);
+		($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR, $basePath, $taxP, $idChange, $isNew, $maxRows);
 		
 		# Get the inserted data from the database
 		my $resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id_change FROM taxonomy ORDER BY key ASC");
 		my @res = map {$_->[0], $_->[1]} @{$resR};
-		is (\@res, \@expecsData, 'Testing valid new insert - data');
+		is (\@res, \@expecsDataMetaG, 'Testing valid new insert with MetaG - data');
 		
 		# Get name_rank and id from database and update
 		# _id_taxonomy_ in %expecs
 		$resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id FROM taxonomy");
 		foreach my $rowR (@{$resR}) {
 			my ($key, $id) = @{$rowR};
-			$expecs{$key}->{'_id_taxonomy_'} = $id
+			$expecsMetaG{$key}->{'_id_taxonomy_'} = $id
 		}
 		# Compare to keysR
-		is ($outKeysR, \%expecs, 'Testing valid new insert - keys');
+		is ($outKeysR, \%expecsMetaG, 'Testing valid new insert with MetaG - keys');
 	
-		is ($isNew, 1, 'Testing valid new insert - any new data inserted?');
+		is ($isNew, 1, 'Testing valid new insert with MetaG - any new data inserted?');
 	}
 	catch {
 		$err = $_;
 		
-		ok (1==2, 'Testing valid new insert');
+		ok (1==2, 'Testing valid new insert with MetaG');
 		print "ERROR: $err" . "\n";
 	}
 	finally {
@@ -6102,8 +6541,92 @@ sub test_insertTaxonomy {
 
 
 	#------------------------------------------------------------------------------#
-	# Valid old insert: Two valid taxonomy ZIP archives per sample (exemplary for
-	# other archive types, see tests for extractArchive)
+	# Valid insert for Kraken2: Two valid taxonomy ZIP archives per sample
+	# (exemplary for other archive types, see tests for extractArchive)
+	# Includes: NULL values for taxon. Duplicates within INSERT (UNMATCHED).
+	#------------------------------------------------------------------------------#
+	$isNew = 0;
+		
+	try {
+		$err = "";
+		
+		# Create the necessary records
+		$dbh->do ("INSERT INTO change (id, username, ts, ip) VALUES ($idChange, 'foo', 1234, 12345678)");
+		$dbh->do("INSERT INTO patient (id, alias, accession, birthdate, id_change) VALUES (1, 'p1', '00001', '1900-01-01', $idChange)");
+		$dbh->do("INSERT INTO patient (id, alias, accession, birthdate, id_change) VALUES (2, 'p2', '00002', '1900-02-02', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (1, 1, '1900-01-01', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (2, 1, '1900-01-01', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (3, 1, '1900-01-02', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (4, 1, '1900-01-02', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (5, 2, '1900-02-02', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (6, 2, '1900-02-02', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (7, 2, '1900-02-03', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (8, 2, '1900-02-03', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(1, 1, 'r1', 'b1', 'A', '!', 'f1', 'a', 'm1', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(2, 1, 'r1', 'b1', 'A', '!', 'f1', 'a_1', 'm1', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(3, 2, 'r2', 'b2', 'AA', '!!', 'f2', 'b', 'm2', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(4, 2, 'r2', 'b2', 'AA', '!!', 'f2', 'b_1', 'm2', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(5, 3, 'r3', 'b3', 'AAA', '!!!', 'f3', 'c', 'm3', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(6, 3, 'r3', 'b3', 'AAA', '!!!', 'f3', 'c_1', 'm3', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(7, 4, 'r4', 'b4', 'AAAA', '!!!!', 'f4', 'd', 'm4', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(8, 4, 'r4', 'b4', 'AAAA', '!!!!', 'f4', 'd_1', 'm4', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(9, 5, 'r5', 'b5', 'AAAAA', '!!!!!', 'f5', 'e', 'm5', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(10, 5, 'r5', 'b5', 'AAAAA', '!!!!!', 'f5', 'e_1', 'm5', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(11, 6, 'r6', 'b6', 'AAAAAA', '!!!!!!', 'f6', 'f', 'm6', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(12, 6, 'r6', 'b6', 'AAAAAA', '!!!!!!', 'f6', 'f_1', 'm6', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(13, 7, 'r7', 'b7', 'AAAAAAA', '!!!!!!!', 'f7', 'g', 'm7', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(14, 7, 'r7', 'b7', 'AAAAAAA', '!!!!!!!', 'f7', 'g_1', 'm7', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(15, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h', 'm8', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(16, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h_1', 'm8', $idChange)");
+		($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleKraken2R, $basePath, $taxP, $idChange, $isNew, $maxRows);
+		
+		# Get the inserted data from the database
+		my $resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id_change FROM taxonomy ORDER BY key ASC");
+		my @res = map {$_->[0], $_->[1]} @{$resR};
+		is (\@res, \@expecsDataKraken2, 'Testing valid new insert with Kraken2 - data');
+		
+		# Get name_rank and id from database and update
+		# _id_taxonomy_ in %expecs
+		$resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id FROM taxonomy");
+		foreach my $rowR (@{$resR}) {
+			my ($key, $id) = @{$rowR};
+			$expecsKraken2{$key}->{'_id_taxonomy_'} = $id
+		}
+		# Compare to keysR
+		is ($outKeysR, \%expecsKraken2, 'Testing valid new insert with Kraken2 - keys');
+	
+		is ($isNew, 1, 'Testing valid new insert with Kraken2 - any new data inserted?');
+	}
+	catch {
+		$err = $_;
+		
+		ok (1==2, 'Testing valid new insert with Kraken2');
+		print "ERROR: $err" . "\n";
+	}
+	finally {
+		$dbh->rollback;
+	};
+
+
+	#------------------------------------------------------------------------------#
+	# Valid old insert with MetaG: Two valid taxonomy ZIP archives per sample
+	# (exemplary for other archive types, see tests for extractArchive)
 	#------------------------------------------------------------------------------#
 	$isNew = 0;
 	
@@ -6154,32 +6677,32 @@ sub test_insertTaxonomy {
 			"(15, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h', 'm8', $idChange)");
 		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
 			"(16, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h_1', 'm8', $idChange)");
-		($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR, $basePath, $idChange, $isNew, $maxRows);
+		($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR, $basePath, $taxP, $idChange, $isNew, $maxRows);
 		
 		# Reset isNew and insert the same data again
 		$isNew = 0;
-		($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR, $basePath, $idChange, $isNew, $maxRows);
+		($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR, $basePath, $taxP, $idChange, $isNew, $maxRows);
 		
 		# Get the inserted data from the database
 		my $resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id_change FROM taxonomy ORDER BY key ASC");
 		my @res = map {$_->[0], $_->[1]} @{$resR};
-		is (\@res, \@expecsData, 'Testing valid old insert - data');
+		is (\@res, \@expecsDataMetaG, 'Testing valid old insert with MetaG - data');
 		
 		# Get name_rank and id from database and update
 		# _id_taxonomy_ in %expecs
 		$resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id FROM taxonomy");
 		foreach my $rowR (@{$resR}) {
 			my ($key, $id) = @{$rowR};
-			$expecs{$key}->{'_id_taxonomy_'} = $id
+			$expecsMetaG{$key}->{'_id_taxonomy_'} = $id
 		}
 		# Compare to keysR
-		is ($outKeysR, \%expecs, 'Testing valid old insert - keys');
-		is ($isNew, 0, 'Testing valid old insert - any new data inserted?');
+		is ($outKeysR, \%expecsMetaG, 'Testing valid old insert with MetaG - keys');
+		is ($isNew, 0, 'Testing valid old insert with MetaG - any new data inserted?');
 	}
 	catch {
 		$err = $_;
 		
-		ok (1==2, 'Testing valid old insert');
+		ok (1==2, 'Testing valid old insert with MetaG');
 		print "ERROR: $err" . "\n";
 	}
 	finally {
@@ -6188,19 +6711,105 @@ sub test_insertTaxonomy {
 	
 	
 	#------------------------------------------------------------------------------#
-	# Valid insert, but one read in sequence file has no classification
+	# Valid old insert with Kraken2: Two valid taxonomy ZIP archives per sample
+	# (exemplary for other archive types, see tests for extractArchive)
+	#------------------------------------------------------------------------------#
+	$isNew = 0;
+	
+	try {
+		$err = "";
+		
+		# Create the necessary records
+		$dbh->do ("INSERT INTO change (id, username, ts, ip) VALUES ($idChange, 'foo', 1234, 12345678)");
+		$dbh->do("INSERT INTO patient (id, alias, accession, birthdate, id_change) VALUES (1, 'p1', '00001', '1900-01-01', $idChange)");
+		$dbh->do("INSERT INTO patient (id, alias, accession, birthdate, id_change) VALUES (2, 'p2', '00002', '1900-02-02', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (1, 1, '1900-01-01', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (2, 1, '1900-01-01', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (3, 1, '1900-01-02', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (4, 1, '1900-01-02', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (5, 2, '1900-02-02', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (6, 2, '1900-02-02', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (7, 2, '1900-02-03', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (8, 2, '1900-02-03', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(1, 1, 'r1', 'b1', 'A', '!', 'f1', 'a', 'm1', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(2, 1, 'r1', 'b1', 'A', '!', 'f1', 'a_1', 'm1', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(3, 2, 'r2', 'b2', 'AA', '!!', 'f2', 'b', 'm2', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(4, 2, 'r2', 'b2', 'AA', '!!', 'f2', 'b_1', 'm2', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(5, 3, 'r3', 'b3', 'AAA', '!!!', 'f3', 'c', 'm3', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(6, 3, 'r3', 'b3', 'AAA', '!!!', 'f3', 'c_1', 'm3', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(7, 4, 'r4', 'b4', 'AAAA', '!!!!', 'f4', 'd', 'm4', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(8, 4, 'r4', 'b4', 'AAAA', '!!!!', 'f4', 'd_1', 'm4', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(9, 5, 'r5', 'b5', 'AAAAA', '!!!!!', 'f5', 'e', 'm5', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(10, 5, 'r5', 'b5', 'AAAAA', '!!!!!', 'f5', 'e_1', 'm5', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(11, 6, 'r6', 'b6', 'AAAAAA', '!!!!!!', 'f6', 'f', 'm6', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(12, 6, 'r6', 'b6', 'AAAAAA', '!!!!!!', 'f6', 'f_1', 'm6', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(13, 7, 'r7', 'b7', 'AAAAAAA', '!!!!!!!', 'f7', 'g', 'm7', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(14, 7, 'r7', 'b7', 'AAAAAAA', '!!!!!!!', 'f7', 'g_1', 'm7', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(15, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h', 'm8', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(16, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h_1', 'm8', $idChange)");
+		($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleKraken2R, $basePath, $taxP, $idChange, $isNew, $maxRows);
+		
+		# Reset isNew and insert the same data again
+		$isNew = 0;
+		($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleKraken2R, $basePath, $taxP, $idChange, $isNew, $maxRows);
+		
+		# Get the inserted data from the database
+		my $resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id_change FROM taxonomy ORDER BY key ASC");
+		my @res = map {$_->[0], $_->[1]} @{$resR};
+		is (\@res, \@expecsDataKraken2, 'Testing valid old insert with Kraken2 - data');
+		
+		# Get name_rank and id from database and update
+		# _id_taxonomy_ in %expecs
+		$resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id FROM taxonomy");
+		foreach my $rowR (@{$resR}) {
+			my ($key, $id) = @{$rowR};
+			$expecsKraken2{$key}->{'_id_taxonomy_'} = $id
+		}
+		# Compare to keysR
+		is ($outKeysR, \%expecsKraken2, 'Testing valid old insert with Kraken2 - keys');
+		is ($isNew, 0, 'Testing valid old insert with Kraken2 - any new data inserted?');
+	}
+	catch {
+		$err = $_;
+		
+		ok (1==2, 'Testing valid old insert with Kraken2');
+		print "ERROR: $err" . "\n";
+	}
+	finally {
+		$dbh->rollback;
+	};
+	
+	
+	#------------------------------------------------------------------------------#
+	# Valid insert with MetaG, but one read in sequence file has no classification
 	# => special taxon FILTERED for this read.
 	#------------------------------------------------------------------------------#
 	$isNew = 0;
 	
 	# Read 16 is missing and will be assigned with the special taxon FILTERED
-	my %expecsMod = %{dclone(\%expecs)};
+	my %expecsModMetaG = %{dclone(\%expecsMetaG)};
 	foreach my $rank ("domain", "phylum", "class", "subclass", "order", "suborder", "family", "genus", "species", "strain") {
-		delete $expecsMod{"UNMATCHED_" . $rank}->{'_id_sequence_'}->{16};
-		$expecsMod{"FILTERED_" . $rank} = {'_id_sequence_' => {16 => ['MetaG', 'RDP']}, '_id_taxonomy_' => undef};
+		delete $expecsModMetaG{"UNMATCHED_" . $rank}->{'_id_sequence_'}->{16};
+		$expecsModMetaG{"FILTERED_" . $rank} = {'_id_sequence_' => {16 => ['MetaG', 'RDP']}, '_id_taxonomy_' => undef};
 	}
-	@tmps = sort {$a cmp $b} keys(%expecsMod);
-	my @expecsDataMod = map {$_, $idChange} @tmps;
+	@tmps = sort {$a cmp $b} keys(%expecsModMetaG);
+	my @expecsDataMetaGMod = map {$_, $idChange} @tmps;
 		
 	try {
 		$err = "";
@@ -6253,28 +6862,28 @@ sub test_insertTaxonomy {
 			"(15, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h', 'm8', $idChange)");
 		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
 			"(16, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h_1', 'm8', $idChange)");
-		($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR, $basePath, $idChange, $isNew, $maxRows);
+		($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR, $basePath, $taxP, $idChange, $isNew, $maxRows);
 		
 		# Get the inserted data from the database
 		my $resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id_change FROM taxonomy ORDER BY key ASC");
 		my @res = map {$_->[0], $_->[1]} @{$resR};
-		is (\@res, \@expecsDataMod, 'Testing one filtered read - data');
+		is (\@res, \@expecsDataMetaGMod, 'Testing one filtered read with MetaG - data');
 		
 		# Get name_rank and id from database and update
 		# _id_taxonomy_ in %expecs
 		$resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id FROM taxonomy");
 		foreach my $rowR (@{$resR}) {
 			my ($key, $id) = @{$rowR};
-			$expecsMod{$key}->{'_id_taxonomy_'} = $id
+			$expecsModMetaG{$key}->{'_id_taxonomy_'} = $id
 		}
 		# Compare to keysR
-		is ($outKeysR, \%expecsMod, 'Testing one filtered read - keys');
-		is ($isNew, 1, 'Testing one filtered read - any new data inserted?');
+		is ($outKeysR, \%expecsModMetaG, 'Testing one filtered read with MetaG - keys');
+		is ($isNew, 1, 'Testing one filtered read with MetaG - any new data inserted?');
 	}
 	catch {
 		$err = $_;
 		
-		ok (1==2, 'Testing one filtered read');
+		ok (1==2, 'Testing one filtered read with MetaG');
 		print "ERROR: $err" . "\n";
 	}
 	finally {
@@ -6283,10 +6892,108 @@ sub test_insertTaxonomy {
 		system("mv $basePath/classifications/run04_bar99/h_1 $basePath/classifications/run04_bar99/h_1_calc.LIN.txt.zip")
 			and die "ERROR: Could not move file.";
 	};
+	
+	
+	#------------------------------------------------------------------------------#
+	# Valid insert with Kraken2, but one read in sequence file has no
+	# classification => special taxon FILTERED for this read.
+	#------------------------------------------------------------------------------#
+	$isNew = 0;
+	
+	# Read 16 is missing and will be assigned with the special taxon FILTERED
+	my %expecsModKraken2 = %{dclone(\%expecsKraken2)};
+	foreach my $rank ("domain", "phylum", "class", "subclass", "order", "suborder", "family", "genus", "species", "strain") {
+		delete $expecsModKraken2{"UNMATCHED_" . $rank}->{'_id_sequence_'}->{16};
+		$expecsModKraken2{"FILTERED_" . $rank} = {'_id_sequence_' => {16 => ['Kraken2', 'RDP']}, '_id_taxonomy_' => undef};
+	}
+	@tmps = sort {$a cmp $b} keys(%expecsModKraken2);
+	my @expecsDataKraken2Mod = map {$_, $idChange} @tmps;
+		
+	try {
+		$err = "";
+		
+		# Hide classification for read 16 from detection
+		system("mv $basePath/classifications_k2/run04_bar99/h_1_kraken2.zip $basePath/classifications_k2/run04_bar99/h_1")
+			and die "ERROR: Could not move file.";
+		
+		# Create the necessary records
+		$dbh->do ("INSERT INTO change (id, username, ts, ip) VALUES ($idChange, 'foo', 1234, 12345678)");
+		$dbh->do("INSERT INTO patient (id, alias, accession, birthdate, id_change) VALUES (1, 'p1', '00001', '1900-01-01', $idChange)");
+		$dbh->do("INSERT INTO patient (id, alias, accession, birthdate, id_change) VALUES (2, 'p2', '00002', '1900-02-02', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (1, 1, '1900-01-01', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (2, 1, '1900-01-01', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (3, 1, '1900-01-02', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (4, 1, '1900-01-02', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (5, 2, '1900-02-02', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (6, 2, '1900-02-02', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (7, 2, '1900-02-03', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (8, 2, '1900-02-03', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(1, 1, 'r1', 'b1', 'A', '!', 'f1', 'a', 'm1', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(2, 1, 'r1', 'b1', 'A', '!', 'f1', 'a_1', 'm1', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(3, 2, 'r2', 'b2', 'AA', '!!', 'f2', 'b', 'm2', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(4, 2, 'r2', 'b2', 'AA', '!!', 'f2', 'b_1', 'm2', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(5, 3, 'r3', 'b3', 'AAA', '!!!', 'f3', 'c', 'm3', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(6, 3, 'r3', 'b3', 'AAA', '!!!', 'f3', 'c_1', 'm3', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(7, 4, 'r4', 'b4', 'AAAA', '!!!!', 'f4', 'd', 'm4', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(8, 4, 'r4', 'b4', 'AAAA', '!!!!', 'f4', 'd_1', 'm4', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(9, 5, 'r5', 'b5', 'AAAAA', '!!!!!', 'f5', 'e', 'm5', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(10, 5, 'r5', 'b5', 'AAAAA', '!!!!!', 'f5', 'e_1', 'm5', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(11, 6, 'r6', 'b6', 'AAAAAA', '!!!!!!', 'f6', 'f', 'm6', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(12, 6, 'r6', 'b6', 'AAAAAA', '!!!!!!', 'f6', 'f_1', 'm6', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(13, 7, 'r7', 'b7', 'AAAAAAA', '!!!!!!!', 'f7', 'g', 'm7', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(14, 7, 'r7', 'b7', 'AAAAAAA', '!!!!!!!', 'f7', 'g_1', 'm7', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(15, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h', 'm8', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(16, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h_1', 'm8', $idChange)");
+		($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleKraken2R, $basePath, $taxP, $idChange, $isNew, $maxRows);
+		
+		# Get the inserted data from the database
+		my $resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id_change FROM taxonomy ORDER BY key ASC");
+		my @res = map {$_->[0], $_->[1]} @{$resR};
+		is (\@res, \@expecsDataKraken2Mod, 'Testing one filtered read with Kraken2 - data');
+		
+		# Get name_rank and id from database and update
+		# _id_taxonomy_ in %expecs
+		$resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id FROM taxonomy");
+		foreach my $rowR (@{$resR}) {
+			my ($key, $id) = @{$rowR};
+			$expecsModKraken2{$key}->{'_id_taxonomy_'} = $id
+		}
+		# Compare to keysR
+		is ($outKeysR, \%expecsModKraken2, 'Testing one filtered read with Kraken2 - keys');
+		is ($isNew, 1, 'Testing one filtered read with Kraken2 - any new data inserted?');
+	}
+	catch {
+		$err = $_;
+		
+		ok (1==2, 'Testing one filtered read with Kraken2');
+		print "ERROR: $err" . "\n";
+	}
+	finally {
+		$dbh->rollback;
+		
+		system("mv $basePath/classifications_k2/run04_bar99/h_1 $basePath/classifications_k2/run04_bar99/h_1_kraken2.zip")
+			and die "ERROR: Could not move file.";
+	};
 
 
 	#------------------------------------------------------------------------------#
-	# Test read IDs in sequence file and taxonomy file don't match
+	# Test read IDs in sequence file and taxonomy file don't match with MetaG
 	# => ERROR
 	#------------------------------------------------------------------------------#
 	$isNew = 0;
@@ -6297,9 +7004,15 @@ sub test_insertTaxonomy {
 	#	pattern is the same.
 	my $keysSeqModR = dclone($keysSeqR);
 	$keysSeqModR->{'run04_bar99'}->{9}->{'h_1'} = 16;
-	my %t = %{$keysSeqModR};
-	delete $t{'run04_bar99'}->{8}->{'h_1'};
-	$keysSeqModR = \%t;
+	delete $keysSeqModR->{'run04_bar99'}->{8}->{'h_1'};
+	my $keysSampleModR = dclone($keysSampleMetaGR);
+	$keysSampleModR->{9} = {
+		'number of run and barcode'	=> 'run04_bar01', # interpreted later as 'run04_bar99'
+		'height'					=> '36cm',
+		'_isControl_'				=> "t",
+		'program'					=> 'MetaG',
+		'database'					=> 'RDP'
+	};
 	
 	try {
 		$err = "";
@@ -6349,25 +7062,106 @@ sub test_insertTaxonomy {
 			"(15, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h', 'm8', $idChange)");
 		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
 			"(16, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h_1', 'm8', $idChange)");
-		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqModR, $keysSampleR, $basePath, $idChange, $isNew, $maxRows);
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqModR, $keysSampleModR, $basePath, $taxP, $idChange, $isNew, $maxRows);
 	}
 	catch {
 		$err = $_;
 	}
 	finally {
-		ok($err =~ m/ERROR.*read ID\(s\) do not match/, 'Testing not matching read IDs');
+		ok($err =~ m/ERROR.*read ID\(s\) do not match/, 'Testing not matching read IDs with MetaG');
+		$dbh->rollback;
+	};
+	
+	
+	#------------------------------------------------------------------------------#
+	# Test read IDs in sequence file and taxonomy file don't match with Kraken2
+	# => ERROR
+	#------------------------------------------------------------------------------#
+	$isNew = 0;
+	
+	# Read h_1 is abscent from sample 8 of 'run04_bar99'. It appears in sample
+	# 9 for the same directory pattern, however there, read h is missing.
+	# => ERROR: Every sample needs to have matching reads, even if the directory
+	#	pattern is the same.
+	$keysSeqModR = dclone($keysSeqR);
+	$keysSeqModR->{'run04_bar99'}->{9}->{'h_1'} = 16;
+	delete $keysSeqModR->{'run04_bar99'}->{8}->{'h_1'};
+	$keysSampleModR = dclone($keysSampleKraken2R);
+	$keysSampleModR->{9} = {
+		'number of run and barcode'	=> 'run04_bar01', # interpreted later as 'run04_bar99'
+		'height'					=> '36cm',
+		'_isControl_'				=> "t",
+		'program'					=> 'Kraken2',
+		'database'					=> 'RDP'
+	};
+	
+	try {
+		$err = "";
+		
+		# Create the necessary records
+		$dbh->do ("INSERT INTO change (id, username, ts, ip) VALUES ($idChange, 'foo', 1234, 12345678)");
+		$dbh->do("INSERT INTO patient (id, alias, accession, birthdate, id_change) VALUES (1, 'p1', '00001', '1900-01-01', $idChange)");
+		$dbh->do("INSERT INTO patient (id, alias, accession, birthdate, id_change) VALUES (2, 'p2', '00002', '1900-02-02', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (1, 1, '1900-01-01', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (2, 1, '1900-01-01', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (3, 1, '1900-01-02', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (4, 1, '1900-01-02', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (5, 2, '1900-02-02', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (6, 2, '1900-02-02', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (7, 2, '1900-02-03', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (8, 2, '1900-02-03', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (9, 2, '1900-02-04', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(1, 1, 'r1', 'b1', 'A', '!', 'f1', 'a', 'm1', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(2, 1, 'r1', 'b1', 'A', '!', 'f1', 'a_1', 'm1', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(3, 2, 'r2', 'b2', 'AA', '!!', 'f2', 'b', 'm2', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(4, 2, 'r2', 'b2', 'AA', '!!', 'f2', 'b_1', 'm2', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(5, 3, 'r3', 'b3', 'AAA', '!!!', 'f3', 'c', 'm3', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(6, 3, 'r3', 'b3', 'AAA', '!!!', 'f3', 'c_1', 'm3', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(7, 4, 'r4', 'b4', 'AAAA', '!!!!', 'f4', 'd', 'm4', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(8, 4, 'r4', 'b4', 'AAAA', '!!!!', 'f4', 'd_1', 'm4', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(9, 5, 'r5', 'b5', 'AAAAA', '!!!!!', 'f5', 'e', 'm5', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(10, 5, 'r5', 'b5', 'AAAAA', '!!!!!', 'f5', 'e_1', 'm5', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(11, 6, 'r6', 'b6', 'AAAAAA', '!!!!!!', 'f6', 'f', 'm6', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(12, 6, 'r6', 'b6', 'AAAAAA', '!!!!!!', 'f6', 'f_1', 'm6', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(13, 7, 'r7', 'b7', 'AAAAAAA', '!!!!!!!', 'f7', 'g', 'm7', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(14, 7, 'r7', 'b7', 'AAAAAAA', '!!!!!!!', 'f7', 'g_1', 'm7', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(15, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h', 'm8', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(16, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h_1', 'm8', $idChange)");
+		MetagDB::Sga::insertTaxonomy($dbh, $keysSeqModR, $keysSampleModR, $basePath, $taxP, $idChange, $isNew, $maxRows);
+	}
+	catch {
+		$err = $_;
+	}
+	finally {
+		ok($err =~ m/ERROR.*read ID\(s\) do not match/, 'Testing not matching read IDs with Kraken2');
 		$dbh->rollback;
 	};
 	
 
 	#------------------------------------------------------------------------------#
-	# Valid insert: Two valid, but empty, taxonomy ZIPs per sample (exemplary for
-	# other archive types, see tests for extractArchive).
+	# Valid insert with MetaG: Two valid, but empty, taxonomy ZIPs per sample
+	# (exemplary for other archive types, see tests for extractArchive).
 	# => Insert special taxon FILTERED.
 	#------------------------------------------------------------------------------#
 	$isNew = 0;
 	
-	%expecsMod = (
+	%expecsModMetaG = (
 		"FILTERED_domain" => {
 			'_id_sequence_' => {
 				'1'	=> ['MetaG', 'RDP'],
@@ -6579,15 +7373,15 @@ sub test_insertTaxonomy {
 			'_id_taxonomy_' => undef
 		}
 	);
-	@tmps = sort {$a cmp $b} keys(%expecsMod);
+	@tmps = sort {$a cmp $b} keys(%expecsModMetaG);
 	# Add idChange
-	@expecsDataMod = map {$_, $idChange} @tmps;
+	@expecsDataMetaGMod = map {$_, $idChange} @tmps;
 	
 	try {
 		$err = "";
 		
 		# Overwrite taxonomy ZIPs with empty ZIP files
-		foreach my $path (keys(%taxFiles)) {
+		foreach my $path (keys(%taxFilesMetaG)) {
 			my ($dir, $file) = split('/', $path);
 			my $data = "";
 			zip \$data => "$basePath/classifications/$path" . "_calc.LIN.txt.zip" , AutoClose=> 1, Name => $file ."_calc.LIN.txt";
@@ -6642,29 +7436,136 @@ sub test_insertTaxonomy {
 		do {
 			local *STDERR;
     		open STDERR, ">", "/dev/null";
-			($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR, $basePath, $idChange, $isNew, $maxRows);
+			($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR, $basePath, $taxP, $idChange, $isNew, $maxRows);
 		};
 		
 		# Get the inserted data from the database
 		my $resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id_change FROM taxonomy ORDER BY key ASC");
 		my @res = map {$_->[0], $_->[1]} @{$resR};
-		is (\@res, \@expecsDataMod, 'Testing empty taxonomy files - data');
+		is (\@res, \@expecsDataMetaGMod, 'Testing empty taxonomy files with MetaG - data');
 		
 		# Get name_rank and id from database and update
 		# _id_taxonomy_ in %expecsMod
 		$resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id FROM taxonomy");
 		foreach my $rowR (@{$resR}) {
 			my ($key, $id) = @{$rowR};
-			$expecsMod{$key}->{'_id_taxonomy_'} = $id
+			$expecsModMetaG{$key}->{'_id_taxonomy_'} = $id
 		}
 		# Compare to keysR
-		is ($outKeysR, \%expecsMod, 'Testing empty taxonomy files - keys');
-		is ($isNew, 1, 'Testing empty taxonomy files - any new data inserted?');
+		is ($outKeysR, \%expecsModMetaG, 'Testing empty taxonomy files with MetaG - keys');
+		is ($isNew, 1, 'Testing empty taxonomy files with MetaG - any new data inserted?');
 	}
 	catch {
 		$err = $_;
 		
-		ok (1==2, 'Testing empty taxonomy files');
+		ok (1==2, 'Testing empty taxonomy files with MetaG');
+		print "ERROR: $err" . "\n";
+	}
+	finally {
+		$dbh->rollback;
+	};
+	
+	
+	#------------------------------------------------------------------------------#
+	# Valid insert with Kraken2: Two valid, but empty, taxonomy ZIPs per sample
+	# (exemplary for other archive types, see tests for extractArchive).
+	# => Insert special taxon FILTERED.
+	#------------------------------------------------------------------------------#
+	$isNew = 0;
+	
+	my $expecsModKraken2R = dclone(\%expecsModMetaG);
+	foreach my $class (keys(%{$expecsModKraken2R})) {
+		foreach my $id (keys %{$expecsModKraken2R->{$class}->{'_id_sequence_'}}) {
+			$expecsModKraken2R->{$class}->{'_id_sequence_'}->{$id}->[0] = 'Kraken2'
+		}
+	};
+	%expecsModKraken2 = %{$expecsModKraken2R};
+	@tmps = sort {$a cmp $b} keys(%expecsModKraken2);
+	# Add idChange
+	@expecsDataKraken2Mod = map {$_, $idChange} @tmps;
+	
+	try {
+		$err = "";
+		
+		# Overwrite taxonomy ZIPs with empty ZIP files
+		foreach my $path (keys(%taxFilesKraken2)) {
+			my ($dir, $file) = split('/', $path);
+			my $data = "";
+			zip \$data => "$basePath/classifications_k2/$path" . "_kraken2.zip" , AutoClose=> 1, Name => $file ."_kraken2.txt";
+		}
+		
+		# Create the necessary records
+		$dbh->do ("INSERT INTO change (id, username, ts, ip) VALUES ($idChange, 'foo', 1234, 12345678)");
+		$dbh->do("INSERT INTO patient (id, alias, accession, birthdate, id_change) VALUES (1, 'p1', '00001', '1900-01-01', $idChange)");
+		$dbh->do("INSERT INTO patient (id, alias, accession, birthdate, id_change) VALUES (2, 'p2', '00002', '1900-02-02', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (1, 1, '1900-01-01', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (2, 1, '1900-01-01', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (3, 1, '1900-01-02', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (4, 1, '1900-01-02', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (5, 2, '1900-02-02', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (6, 2, '1900-02-02', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (7, 2, '1900-02-03', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (8, 2, '1900-02-03', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(1, 1, 'r1', 'b1', 'A', '!', 'f1', 'a', 'm1', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(2, 1, 'r1', 'b1', 'A', '!', 'f1', 'a_1', 'm1', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(3, 2, 'r2', 'b2', 'AA', '!!', 'f2', 'b', 'm2', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(4, 2, 'r2', 'b2', 'AA', '!!', 'f2', 'b_1', 'm2', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(5, 3, 'r3', 'b3', 'AAA', '!!!', 'f3', 'c', 'm3', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(6, 3, 'r3', 'b3', 'AAA', '!!!', 'f3', 'c_1', 'm3', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(7, 4, 'r4', 'b4', 'AAAA', '!!!!', 'f4', 'd', 'm4', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(8, 4, 'r4', 'b4', 'AAAA', '!!!!', 'f4', 'd_1', 'm4', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(9, 5, 'r5', 'b5', 'AAAAA', '!!!!!', 'f5', 'e', 'm5', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(10, 5, 'r5', 'b5', 'AAAAA', '!!!!!', 'f5', 'e_1', 'm5', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(11, 6, 'r6', 'b6', 'AAAAAA', '!!!!!!', 'f6', 'f', 'm6', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(12, 6, 'r6', 'b6', 'AAAAAA', '!!!!!!', 'f6', 'f_1', 'm6', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(13, 7, 'r7', 'b7', 'AAAAAAA', '!!!!!!!', 'f7', 'g', 'm7', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(14, 7, 'r7', 'b7', 'AAAAAAA', '!!!!!!!', 'f7', 'g_1', 'm7', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(15, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h', 'm8', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(16, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h_1', 'm8', $idChange)");
+		
+		# Don't show warnings about empty ZIPs on terminal
+		do {
+			local *STDERR;
+    		open STDERR, ">", "/dev/null";
+			($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleKraken2R, $basePath, $taxP, $idChange, $isNew, $maxRows);
+		};
+		
+		# Get the inserted data from the database
+		my $resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id_change FROM taxonomy ORDER BY key ASC");
+		my @res = map {$_->[0], $_->[1]} @{$resR};
+		is (\@res, \@expecsDataKraken2Mod, 'Testing empty taxonomy files with Kraken2 - data');
+		
+		# Get name_rank and id from database and update
+		# _id_taxonomy_ in %expecsMod
+		$resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id FROM taxonomy");
+		foreach my $rowR (@{$resR}) {
+			my ($key, $id) = @{$rowR};
+			$expecsModKraken2{$key}->{'_id_taxonomy_'} = $id
+		}
+		# Compare to keysR
+		is ($outKeysR, \%expecsModKraken2, 'Testing empty taxonomy files with Kraken2 - keys');
+		is ($isNew, 1, 'Testing empty taxonomy files with Kraken2 - any new data inserted?');
+	}
+	catch {
+		$err = $_;
+		
+		ok (1==2, 'Testing empty taxonomy files with Kraken2');
 		print "ERROR: $err" . "\n";
 	}
 	finally {
@@ -6673,7 +7574,7 @@ sub test_insertTaxonomy {
 
 
 	#------------------------------------------------------------------------------#
-	# Valid insert: Two valid, taxonomy ZIPs per sample (exemplary for
+	# Valid insert with MetaG: Two valid, taxonomy ZIPs per sample (exemplary for
 	# other archive types, see tests for extractArchive) containing only
 	# whitespaces.
 	# => Insert special taxon FILTERED
@@ -6684,7 +7585,7 @@ sub test_insertTaxonomy {
 		$err = "";
 		
 		# Overwrite taxonomy ZIPs with empty ZIP files
-		foreach my $path (keys(%taxFiles)) {
+		foreach my $path (keys(%taxFilesMetaG)) {
 			my ($dir, $file) = split('/', $path);
 			my $data = "      ";
 			zip \$data => "$basePath/classifications/$path" . "_calc.LIN.txt.zip" , AutoClose=> 1, Name => $file ."_calc.LIN.txt";
@@ -6739,29 +7640,29 @@ sub test_insertTaxonomy {
 		do {
 			local *STDERR;
     		open STDERR, ">", "/dev/null";
-			($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR, $basePath, $idChange, $isNew, $maxRows);
+			($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR, $basePath, $taxP, $idChange, $isNew, $maxRows);
 		};
 		
 		# Get the inserted data from the database
 		my $resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id_change FROM taxonomy ORDER BY key ASC");
 		my @res = map {$_->[0], $_->[1]} @{$resR};
-		is (\@res, \@expecsDataMod, 'Testing taxonomy files containing only whitespaces - data');
+		is (\@res, \@expecsDataMetaGMod, 'Testing taxonomy files containing only whitespaces with MetaG - data');
 		
 		# Get name_rank and id from database and update
 		# _id_taxonomy_ in %expecsMod
 		$resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id FROM taxonomy");
 		foreach my $rowR (@{$resR}) {
 			my ($key, $id) = @{$rowR};
-			$expecsMod{$key}->{'_id_taxonomy_'} = $id
+			$expecsModMetaG{$key}->{'_id_taxonomy_'} = $id
 		}
 		# Compare to keysR
-		is ($outKeysR, \%expecsMod, 'Testing taxonomy files containing only whitespaces - keys');
-		is ($isNew, 1, 'Testing taxonomy files containing only whitespaces - any new data inserted?');
+		is ($outKeysR, \%expecsModMetaG, 'Testing taxonomy files containing only whitespaces with MetaG - keys');
+		is ($isNew, 1, 'Testing taxonomy files containing only whitespaces with MetaG - any new data inserted?');
 	}
 	catch {
 		$err = $_;
 		
-		ok (1==2, 'Testing taxonomy files containing only whitespaces');
+		ok (1==2, 'Testing taxonomy files containing only whitespaces with MetaG');
 		print "ERROR: $err" . "\n";
 	}
 	finally {
@@ -6770,7 +7671,105 @@ sub test_insertTaxonomy {
 	
 	
 	#------------------------------------------------------------------------------#
-	# Test missing files vs files containing whitespaces.
+	# Valid insert with Kraken2: Two valid, taxonomy ZIPs per sample (exemplary for
+	# other archive types, see tests for extractArchive) containing only
+	# whitespaces.
+	# => Insert special taxon FILTERED
+	#------------------------------------------------------------------------------#
+	$isNew = 0;
+	
+	try {
+		$err = "";
+		
+		# Overwrite taxonomy ZIPs with empty ZIP files
+		foreach my $path (keys(%taxFilesKraken2)) {
+			my ($dir, $file) = split('/', $path);
+			my $data = "      ";
+			zip \$data => "$basePath/classifications_k2/$path" . "_kraken2.zip" , AutoClose=> 1, Name => $file ."_kraken2";
+		}
+		
+		# Create the necessary records
+		$dbh->do ("INSERT INTO change (id, username, ts, ip) VALUES ($idChange, 'foo', 1234, 12345678)");
+		$dbh->do("INSERT INTO patient (id, alias, accession, birthdate, id_change) VALUES (1, 'p1', '00001', '1900-01-01', $idChange)");
+		$dbh->do("INSERT INTO patient (id, alias, accession, birthdate, id_change) VALUES (2, 'p2', '00002', '1900-02-02', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (1, 1, '1900-01-01', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (2, 1, '1900-01-01', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (3, 1, '1900-01-02', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (4, 1, '1900-01-02', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (5, 2, '1900-02-02', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (6, 2, '1900-02-02', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (7, 2, '1900-02-03', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (8, 2, '1900-02-03', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(1, 1, 'r1', 'b1', 'A', '!', 'f1', 'a', 'm1', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(2, 1, 'r1', 'b1', 'A', '!', 'f1', 'a_1', 'm1', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(3, 2, 'r2', 'b2', 'AA', '!!', 'f2', 'b', 'm2', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(4, 2, 'r2', 'b2', 'AA', '!!', 'f2', 'b_1', 'm2', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(5, 3, 'r3', 'b3', 'AAA', '!!!', 'f3', 'c', 'm3', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(6, 3, 'r3', 'b3', 'AAA', '!!!', 'f3', 'c_1', 'm3', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(7, 4, 'r4', 'b4', 'AAAA', '!!!!', 'f4', 'd', 'm4', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(8, 4, 'r4', 'b4', 'AAAA', '!!!!', 'f4', 'd_1', 'm4', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(9, 5, 'r5', 'b5', 'AAAAA', '!!!!!', 'f5', 'e', 'm5', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(10, 5, 'r5', 'b5', 'AAAAA', '!!!!!', 'f5', 'e_1', 'm5', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(11, 6, 'r6', 'b6', 'AAAAAA', '!!!!!!', 'f6', 'f', 'm6', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(12, 6, 'r6', 'b6', 'AAAAAA', '!!!!!!', 'f6', 'f_1', 'm6', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(13, 7, 'r7', 'b7', 'AAAAAAA', '!!!!!!!', 'f7', 'g', 'm7', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(14, 7, 'r7', 'b7', 'AAAAAAA', '!!!!!!!', 'f7', 'g_1', 'm7', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(15, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h', 'm8', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(16, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h_1', 'm8', $idChange)");
+		
+		# Don't show warnings about empty ZIPs on terminal
+		do {
+			local *STDERR;
+    		open STDERR, ">", "/dev/null";
+			($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleKraken2R, $basePath, $taxP, $idChange, $isNew, $maxRows);
+		};
+		
+		# Get the inserted data from the database
+		my $resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id_change FROM taxonomy ORDER BY key ASC");
+		my @res = map {$_->[0], $_->[1]} @{$resR};
+		is (\@res, \@expecsDataKraken2Mod, 'Testing taxonomy files containing only whitespaces with Kraken2 - data');
+		
+		# Get name_rank and id from database and update
+		# _id_taxonomy_ in %expecsMod
+		$resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id FROM taxonomy");
+		foreach my $rowR (@{$resR}) {
+			my ($key, $id) = @{$rowR};
+			$expecsModKraken2{$key}->{'_id_taxonomy_'} = $id
+		}
+		# Compare to keysR
+		is ($outKeysR, \%expecsModKraken2, 'Testing taxonomy files containing only whitespaces with Kraken2 - keys');
+		is ($isNew, 1, 'Testing taxonomy files containing only whitespaces with Kraken2 - any new data inserted?');
+	}
+	catch {
+		$err = $_;
+		
+		ok (1==2, 'Testing taxonomy files containing only whitespaces with Kraken2');
+		print "ERROR: $err" . "\n";
+	}
+	finally {
+		$dbh->rollback;
+	};
+	
+	
+	#------------------------------------------------------------------------------#
+	# Test missing files vs files containing whitespaces with MetaG (depends on
+	# previous MetaG test to produce the whitespace files).
 	# => Reads related to missing taxonomy files should not get the special
 	# FILTERED taxon.
 	# Since classification files within one directory pattern are merged, all
@@ -6778,7 +7777,7 @@ sub test_insertTaxonomy {
 	#------------------------------------------------------------------------------#
 	$isNew = 0;
 	
-	%expecsMod = (
+	%expecsModMetaG = (
 		"FILTERED_domain" => {
 			'_id_sequence_' => {
 				'1'	=> ['MetaG', 'RDP'],
@@ -6970,9 +7969,9 @@ sub test_insertTaxonomy {
 			'_id_taxonomy_' => undef
 		}
 	);
-	@tmps = sort {$a cmp $b} keys(%expecsMod);
+	@tmps = sort {$a cmp $b} keys(%expecsModMetaG);
 	# Add idChange
-	@expecsDataMod = map {$_, $idChange} @tmps;
+	@expecsDataMetaGMod = map {$_, $idChange} @tmps;
 	
 	try {
 		$err = "";
@@ -7032,29 +8031,29 @@ sub test_insertTaxonomy {
 		do {
 			local *STDERR;
     		open STDERR, ">>", "/dev/null";
-			($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleR, $basePath, $idChange, $isNew, $maxRows);
+			($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleMetaGR, $basePath, $taxP, $idChange, $isNew, $maxRows);
 		};
 		
 		# Get the inserted data from the database
 		my $resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id_change FROM taxonomy ORDER BY key ASC");
 		my @res = map {$_->[0], $_->[1]} @{$resR};
-		is (\@res, \@expecsDataMod, 'Testing missing vs file containing whitespaces - data');
+		is (\@res, \@expecsDataMetaGMod, 'Testing missing vs file containing whitespaces with MetaG - data');
 		
 		# Get name_rank and id from database and update
 		# _id_taxonomy_ in %expecsMod
 		$resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id FROM taxonomy");
 		foreach my $rowR (@{$resR}) {
 			my ($key, $id) = @{$rowR};
-			$expecsMod{$key}->{'_id_taxonomy_'} = $id
+			$expecsModMetaG{$key}->{'_id_taxonomy_'} = $id
 		}
 		# Compare to keysR
-		is ($outKeysR, \%expecsMod, 'Testing missing vs file containing whitespaces - keys');
-		is ($isNew, 1, 'Testing missing vs file containing whitespaces - any new data inserted?');
+		is ($outKeysR, \%expecsModMetaG, 'Testing missing vs file containing whitespaces with MetaG - keys');
+		is ($isNew, 1, 'Testing missing vs file containing whitespaces with MetaG - any new data inserted?');
 	}
 	catch {
 		$err = $_;
 		
-		ok (1==2, 'Testing missing vs file containing whitespaces');
+		ok (1==2, 'Testing missing vs file containing whitespaces with MetaG');
 		print "ERROR: $err" . "\n";
 	}
 	finally {
@@ -7066,6 +8065,120 @@ sub test_insertTaxonomy {
 			and die "ERROR: Could not move file.";
 	};
 
+
+	#------------------------------------------------------------------------------#
+	# Test missing files vs files containing whitespaces with Kraken2 (depends
+	# on previous Kraken2 test to produce the whitespace files).
+	# => Reads related to missing taxonomy files should not get the special
+	# FILTERED taxon.
+	# Since classification files within one directory pattern are merged, all
+	# files for run04_bar99 were removed for this test.
+	#------------------------------------------------------------------------------#
+	$isNew = 0;
+	
+	$expecsModKraken2R = dclone(\%expecsModMetaG);
+	%expecsModKraken2 = %{$expecsModKraken2R};
+	foreach my $class (keys(%expecsModKraken2)) {
+		foreach my $id (keys(%{$expecsModKraken2{$class}->{'_id_sequence_'}})) {
+			$expecsModKraken2{$class}->{'_id_sequence_'}->{$id}->[0] = 'Kraken2'
+		}
+	}
+	@tmps = sort {$a cmp $b} keys(%expecsModKraken2);
+	# Add idChange
+	@expecsDataKraken2Mod = map {$_, $idChange} @tmps;
+	
+	try {
+		$err = "";
+
+		# Hide two ZIPs from the algorithm
+		system("mv $basePath/classifications_k2/run04_bar99/h_kraken2.zip $basePath/classifications_k2/run04_bar99/h")
+			and die "ERROR: Could not move file.";
+		system("mv $basePath/classifications_k2/run04_bar99/h_1_kraken2.zip $basePath/classifications_k2/run04_bar99/h_1")
+			and die "ERROR: Could not move file.";
+		
+		# Create the necessary records
+		$dbh->do ("INSERT INTO change (id, username, ts, ip) VALUES ($idChange, 'foo', 1234, 12345678)");
+		$dbh->do("INSERT INTO patient (id, alias, accession, birthdate, id_change) VALUES (1, 'p1', '00001', '1900-01-01', $idChange)");
+		$dbh->do("INSERT INTO patient (id, alias, accession, birthdate, id_change) VALUES (2, 'p2', '00002', '1900-02-02', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (1, 1, '1900-01-01', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (2, 1, '1900-01-01', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (3, 1, '1900-01-02', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (4, 1, '1900-01-02', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (5, 2, '1900-02-02', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (6, 2, '1900-02-02', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (7, 2, '1900-02-03', 'foobar', 'f', $idChange)");
+		$dbh->do("INSERT INTO sample (id, id_patient, createdate, createdby, iscontrol, id_change) VALUES (8, 2, '1900-02-03', 'foobar', 't', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(1, 1, 'r1', 'b1', 'A', '!', 'f1', 'a', 'm1', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(2, 1, 'r1', 'b1', 'A', '!', 'f1', 'a_1', 'm1', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(3, 2, 'r2', 'b2', 'AA', '!!', 'f2', 'b', 'm2', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(4, 2, 'r2', 'b2', 'AA', '!!', 'f2', 'b_1', 'm2', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(5, 3, 'r3', 'b3', 'AAA', '!!!', 'f3', 'c', 'm3', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(6, 3, 'r3', 'b3', 'AAA', '!!!', 'f3', 'c_1', 'm3', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(7, 4, 'r4', 'b4', 'AAAA', '!!!!', 'f4', 'd', 'm4', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(8, 4, 'r4', 'b4', 'AAAA', '!!!!', 'f4', 'd_1', 'm4', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(9, 5, 'r5', 'b5', 'AAAAA', '!!!!!', 'f5', 'e', 'm5', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(10, 5, 'r5', 'b5', 'AAAAA', '!!!!!', 'f5', 'e_1', 'm5', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(11, 6, 'r6', 'b6', 'AAAAAA', '!!!!!!', 'f6', 'f', 'm6', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(12, 6, 'r6', 'b6', 'AAAAAA', '!!!!!!', 'f6', 'f_1', 'm6', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(13, 7, 'r7', 'b7', 'AAAAAAA', '!!!!!!!', 'f7', 'g', 'm7', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(14, 7, 'r7', 'b7', 'AAAAAAA', '!!!!!!!', 'f7', 'g_1', 'm7', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(15, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h', 'm8', $idChange)");
+		$dbh->do("INSERT INTO sequence (id, id_sample, runid, barcode, nucs, quality, flowcellid, readid, callermodel, id_change) VALUES " .
+			"(16, 8, 'r8', 'b8', 'AAAAAAAA', '!!!!!!!!', 'f8', 'h_1', 'm8', $idChange)");
+		
+		# Don't show warnings about empty ZIPs on terminal
+		do {
+			local *STDERR;
+    		open STDERR, ">>", "/dev/null";
+			($outKeysR, $isNew) = MetagDB::Sga::insertTaxonomy($dbh, $keysSeqR, $keysSampleKraken2R, $basePath, $taxP, $idChange, $isNew, $maxRows);
+		};
+		
+		# Get the inserted data from the database
+		my $resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id_change FROM taxonomy ORDER BY key ASC");
+		my @res = map {$_->[0], $_->[1]} @{$resR};
+		is (\@res, \@expecsDataKraken2Mod, 'Testing missing vs file containing whitespaces with Kraken2 - data');
+		
+		# Get name_rank and id from database and update
+		# _id_taxonomy_ in %expecsMod
+		$resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id FROM taxonomy");
+		foreach my $rowR (@{$resR}) {
+			my ($key, $id) = @{$rowR};
+			$expecsModKraken2{$key}->{'_id_taxonomy_'} = $id
+		}
+		# Compare to keysR
+		is ($outKeysR, \%expecsModKraken2, 'Testing missing vs file containing whitespaces with Kraken2 - keys');
+		is ($isNew, 1, 'Testing missing vs file containing whitespaces with Kraken2 - any new data inserted?');
+	}
+	catch {
+		$err = $_;
+		
+		ok (1==2, 'Testing missing vs file containing whitespaces with Kraken2');
+		print "ERROR: $err" . "\n";
+	}
+	finally {
+		$dbh->rollback;
+		
+		system("mv $basePath/classifications_k2/run04_bar99/h $basePath/classifications_k2/run04_bar99/h_kraken2.zip")
+			and die "ERROR: Could not move file.";
+		system("mv $basePath/classifications_k2/run04_bar99/h_1 $basePath/classifications_k2/run04_bar99/h_1_kraken2.zip")
+			and die "ERROR: Could not move file.";
+	};
+	
 		
 	return $dbh;
 }
@@ -17345,6 +18458,7 @@ for (my $i = 0; $i <= 30; $i++) {
 	$rand .= getLetter($int);
 }
 my $basePath = "/tmp/$rand";
+my $taxP = "data/kraken2/tax/test/taxonomy";
 
 try {
 	# Create the test directory
@@ -17409,7 +18523,7 @@ try {
 	
 	# Insert entry in taxonomy relation
 	print "INFO: Testing insert in taxonomy\n";
-	$dbh = test_insertTaxonomy($dbh, $basePath);
+	$dbh = test_insertTaxonomy($dbh, $basePath, $taxP);
 	
 	# Insert entry in classification relation
 	print "INFO: Testing insert in classification\n";

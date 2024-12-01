@@ -1,0 +1,3 @@
+Downloaded pre-built database from https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20240904.tar.gz
+(version 9/4/2024) on 2024/11/05, due to problems with generating it from scratch.
+Only kept minimum amount of taxa.
