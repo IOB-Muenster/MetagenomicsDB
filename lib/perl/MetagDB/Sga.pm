@@ -884,8 +884,8 @@ sub insertTaxonomy ($dbh, $keysSeqR, $keysSampleR, $basePath, $taxP, $idChange, 
 		if ($classN =~ m/metag/i) { 
 			$filePattern = '.*calc\.LIN\.txt.*';
 		}
-		elsif ($classN =~ m/kraken2/i) {
-			die "ERROR: Taxonomy path required for ->$classN<-" if (not $taxP or not defined $taxP);
+		elsif ($classN =~ m/kraken\s*2/i) {
+			die "ERROR: Taxonomy path required for ->Kraken 2<-" if (not $taxP or not defined $taxP);
 			$filePattern = '.*kraken2.*';
 		}
 		else {
@@ -925,7 +925,7 @@ sub insertTaxonomy ($dbh, $keysSeqR, $keysSampleR, $basePath, $taxP, $idChange, 
 			if ($classN =~ m/metag/i){
 				$taxaR = MetagDB::Taxa::parseMetaG($data, \@ranks);
 			}
-			elsif ($classN =~ m/kraken2/i){
+			elsif ($classN =~ m/kraken\s*2/i){
 				$taxaR = MetagDB::Taxa::parseKraken2($data, $taxP, \@ranks);
 			}
 		}

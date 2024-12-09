@@ -68,7 +68,7 @@ sub extractValue ($in = "", $maxLevel = -1) {
 	while (1 == 1) {
 		# Get file type from variable
 		my $type = File::Type->new();
-		$type = $type->mime_type($in) // "";
+		$type = $type->checktype_contents($in) // "";
 		
 		# Only ZIP archives can include resource forks,
 		# if created on MacOS ('._*' files). Skip these.

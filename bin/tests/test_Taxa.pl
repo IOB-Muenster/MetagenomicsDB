@@ -1250,7 +1250,7 @@ sub test_parseKraken2 {
 	
 	
 	#------------------------------------------------------------------------------#
-	# Test invalid Kraken2 classification with too many columns
+	# Test invalid Kraken 2 classification with too many columns
 	#------------------------------------------------------------------------------#
 	my $tmpClass = "";
 	try {
@@ -1263,12 +1263,12 @@ sub test_parseKraken2 {
 		$err = $_;
 	}
 	finally {
-		ok ($err =~ m/^ERROR.*Invalid Kraken2 report format/, 'Testing Kraken2 classifications - too many columns');
+		ok ($err =~ m/^ERROR.*Invalid Kraken 2 report format/, 'Testing Kraken 2 classifications - too many columns');
 	};
 	
 	
 	#------------------------------------------------------------------------------#
-	# Test invalid Kraken2 classification empty isClass
+	# Test invalid Kraken 2 classification empty isClass
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
@@ -1280,12 +1280,12 @@ sub test_parseKraken2 {
 		$err = $_;
 	}
 	finally {
-		ok ($err =~ m/^ERROR.*Invalid Kraken2 report format/, 'Testing Kraken2 classifications - empty isClass');
+		ok ($err =~ m/^ERROR.*Invalid Kraken 2 report format/, 'Testing Kraken 2 classifications - empty isClass');
 	};
 	
 	
 	#------------------------------------------------------------------------------#
-	# Test invalid Kraken2 classification empty read ID
+	# Test invalid Kraken 2 classification empty read ID
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
@@ -1297,12 +1297,12 @@ sub test_parseKraken2 {
 		$err = $_;
 	}
 	finally {
-		ok ($err =~ m/^ERROR.*Invalid Kraken2 report format/, 'Testing Kraken2 classifications - empty read ID');
+		ok ($err =~ m/^ERROR.*Invalid Kraken 2 report format/, 'Testing Kraken 2 classifications - empty read ID');
 	};
 	
 	
 	#------------------------------------------------------------------------------#
-	# Test invalid Kraken2 classification empty taxonomy ID
+	# Test invalid Kraken 2 classification empty taxonomy ID
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
@@ -1314,12 +1314,12 @@ sub test_parseKraken2 {
 		$err = $_;
 	}
 	finally {
-		ok ($err =~ m/^ERROR.*Invalid Kraken2 report format/, 'Testing Kraken2 classifications - empty taxonomy ID');
+		ok ($err =~ m/^ERROR.*Invalid Kraken 2 report format/, 'Testing Kraken 2 classifications - empty taxonomy ID');
 	};
 	
 	
 	#------------------------------------------------------------------------------#
-	# Test invalid Kraken2 classification with invalid taxonomy ID
+	# Test invalid Kraken 2 classification with invalid taxonomy ID
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
@@ -1331,12 +1331,12 @@ sub test_parseKraken2 {
 		$err = $_;
 	}
 	finally {
-		ok ($err =~ m/^ERROR.*Invalid Kraken2 report format/, 'Testing Kraken2 classifications - invalid taxonomy ID');
+		ok ($err =~ m/^ERROR.*Invalid Kraken 2 report format/, 'Testing Kraken 2 classifications - invalid taxonomy ID');
 	};
 	
 	
 	#------------------------------------------------------------------------------#
-	# Test valid Kraken2 classification empty length and kmer info which are
+	# Test valid Kraken 2 classification empty length and kmer info which are
 	# not needed for the function.
 	#------------------------------------------------------------------------------#
 	$resR = {};
@@ -1355,7 +1355,7 @@ sub test_parseKraken2 {
 	
 	
 	#------------------------------------------------------------------------------#
-	# Test invalid Kraken2 classification wrong taxonomy ID for unclassified read
+	# Test invalid Kraken 2 classification wrong taxonomy ID for unclassified read
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
@@ -1367,12 +1367,12 @@ sub test_parseKraken2 {
 		$err = $_;
 	}
 	finally {
-		ok ($err =~ m/^ERROR.*Invalid Kraken2 report format/, 'Testing Kraken2 classifications - wrong taxonomy ID for unclassified');
+		ok ($err =~ m/^ERROR.*Invalid Kraken 2 report format/, 'Testing Kraken 2 classifications - wrong taxonomy ID for unclassified');
 	};
 	
 	
 	#------------------------------------------------------------------------------#
-	# Test invalid Kraken2 classification duplicate unclassified read
+	# Test invalid Kraken 2 classification duplicate unclassified read
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
@@ -1384,12 +1384,12 @@ sub test_parseKraken2 {
 		$err = $_;
 	}
 	finally {
-		ok ($err =~ m/^ERROR.*marked as unclassified more than once/, 'Testing Kraken2 classifications - duplicate of unclassified');
+		ok ($err =~ m/^ERROR.*marked as unclassified more than once/, 'Testing Kraken 2 classifications - duplicate of unclassified');
 	};
 	
 	
 	#------------------------------------------------------------------------------#
-	# Test invalid Kraken2 classification duplicate classified read
+	# Test invalid Kraken 2 classification duplicate classified read
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
@@ -1406,7 +1406,7 @@ sub test_parseKraken2 {
 	
 	
 	#------------------------------------------------------------------------------#
-	# Test invalid Kraken2 classification duplicate classified + unclassified read
+	# Test invalid Kraken 2 classification duplicate classified + unclassified read
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
@@ -1423,7 +1423,7 @@ sub test_parseKraken2 {
 	
 	
 	#------------------------------------------------------------------------------#
-	# Test invalid Kraken2 classification wrong taxonomy ID for classified read
+	# Test invalid Kraken 2 classification wrong taxonomy ID for classified read
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
@@ -1435,12 +1435,12 @@ sub test_parseKraken2 {
 		$err = $_;
 	}
 	finally {
-		ok ($err =~ m/^ERROR.*Invalid Kraken2 report format/, 'Testing Kraken2 classifications - wrong taxonomy ID for classified');
+		ok ($err =~ m/^ERROR.*Invalid Kraken 2 report format/, 'Testing Kraken 2 classifications - wrong taxonomy ID for classified');
 	};
 	
 	
 	#------------------------------------------------------------------------------#
-	# Test invalid Kraken2 classification wrong isClass
+	# Test invalid Kraken 2 classification wrong isClass
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
@@ -1452,7 +1452,7 @@ sub test_parseKraken2 {
 		$err = $_;
 	}
 	finally {
-		ok ($err =~ m/^ERROR.*Invalid Kraken2 report format/, 'Testing Kraken2 classifications - wrong isClass');
+		ok ($err =~ m/^ERROR.*Invalid Kraken 2 report format/, 'Testing Kraken 2 classifications - wrong isClass');
 	};
 	
 	
@@ -1476,7 +1476,7 @@ sub test_parseKraken2 {
 	
 	
 	#------------------------------------------------------------------------------#
-	# Test valid Kraken2 only unclassified reads
+	# Test valid Kraken 2 only unclassified reads
 	#------------------------------------------------------------------------------#
 	my %exp_valid_unclass = (
 		'read1' => {
@@ -1821,8 +1821,8 @@ sub test_parseKraken2 {
 print "INFO: Testing parseMetaG function\n";
 test_parseMetaG;
 
-# Parsing of Kraken2 classification file
-print "INFO: Testing parseKraken2 function\n";
+# Parsing of Kraken 2 classification file
+print "INFO: Testing parseKraken 2 function\n";
 test_parseKraken2;
 
 done_testing;

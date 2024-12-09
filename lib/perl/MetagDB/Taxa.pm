@@ -237,18 +237,18 @@ sub parseMetaG ($class, $ranksR = ["domain", "phylum", "class", "subclass", "ord
 
 #
 #--------------------------------------------------------------------------------------------------#
-# Parse the standard Kraken2 output format and extract the classification per read.
+# Parse the standard Kraken 2 output format and extract the classification per read.
 #
-# The format of the Kraken2 output is described here: https://github.com/DerrickWood/kraken2/wiki/
+# The format of the Kraken 2 output is described here: https://github.com/DerrickWood/kraken2/wiki/
 # Manual#output-formats; accessed 2024/11/05. The only columns that are actively processed are
 # zero (classified or not) and two (taxonomy ID). In order to translate the taxonomy IDs to
 # lineages containing the ranks provided by the user, TaxonKit version >= v0.19.0 is required
 # (https://bioinf.shenwei.me/taxonkit/) and must be located in the PATH. In the process, a
 # temporary file is created and automatically deleted by File::Temp.
-# Kraken2 uses NCBI's taxonomy IDs for its standard database (https://github.com/DerrickWood/
+# Kraken 2 uses NCBI's taxonomy IDs for its standard database (https://github.com/DerrickWood/
 # kraken2/wiki/Manual#standard-kraken-2-database; accessed 2024/11/05) and fake IDs for GreenGenes,
 # RDP, and SILVA (https://github.com/DerrickWood/kraken2/wiki/Manual#special-databases; accessed
-# 2024/11/05). Thus, the function also needs the path to the respective Kraken2 database folder
+# 2024/11/05). Thus, the function also needs the path to the respective Kraken 2 database folder
 # containing the "names.dmp" and "nodes.dmp" files (taxP).
 #--------------------------------------------------------------------------------------------------#
 #
@@ -324,7 +324,7 @@ sub parseKraken2 ($class, $taxP, $ranksR = ["domain", "phylum", "class", "subcla
 
 	
 	#----------------------------------------------------------------------------------------------#
-	# Get unclassified reads and check Kraken2 report format
+	# Get unclassified reads and check Kraken 2 report format
 	#----------------------------------------------------------------------------------------------#
 	my $classified = "";
 	my %res = ();
@@ -334,14 +334,14 @@ sub parseKraken2 ($class, $taxP, $ranksR = ["domain", "phylum", "class", "subcla
 	foreach my $line (@lines) {
 		# Keep length and kmer info fields, even if they are empty		
 		my @splits = split("\t", $line, -1);
-		die "ERROR: Invalid Kraken2 report format ->" . join("\t", @splits) . "<-"
+		die "ERROR: Invalid Kraken 2 report format ->" . join("\t", @splits) . "<-"
 			if (@splits != 5);
 		my ($isClass, $readId, $taxId, $len, $kmer) = @splits;
 		# TaxID 0 is possible
-		die "ERROR: Invalid Kraken2 report format ->" . join("\t", @splits) . "<-"
+		die "ERROR: Invalid Kraken 2 report format ->" . join("\t", @splits) . "<-"
 			if (not $isClass or not $readId or $taxId eq "" or $taxId !~ m/^\d+$/);
 		if ($isClass eq "U") {
-			die "ERROR: Invalid Kraken2 report format ->" . join("\t", @splits) . "<-"
+			die "ERROR: Invalid Kraken 2 report format ->" . join("\t", @splits) . "<-"
 				if ($taxId != 0);
 			die "ERROR: Read ->$readId<- marked as unclassified more than once."
 				if (exists $res{$readId});
@@ -352,15 +352,15 @@ sub parseKraken2 ($class, $taxP, $ranksR = ["domain", "phylum", "class", "subcla
 			}
 		}
 		elsif ($isClass eq "C") {
-			die "ERROR: Invalid Kraken2 report format ->" . join("\t", @splits) . "<-"
+			die "ERROR: Invalid Kraken 2 report format ->" . join("\t", @splits) . "<-"
 				if ($taxId == 0);
 			$classified .= $line . "\n";
 		}
 		else {
-			die "ERROR: Invalid Kraken2 report format ->" . join("\t", @splits) . "<-";
+			die "ERROR: Invalid Kraken 2 report format ->" . join("\t", @splits) . "<-";
 		}
 	}
-	# No reads classified by Kraken2
+	# No reads classified by Kraken 2
 	return \%res if ($classified =~ m/^\s*$/);
 	
 	

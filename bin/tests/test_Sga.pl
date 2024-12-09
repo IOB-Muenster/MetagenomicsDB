@@ -4659,7 +4659,7 @@ sub test_insertTaxonomy {
 	};
 	my $keysSampleKraken2R = dclone($keysSampleMetaGR);
 	foreach my $id (keys(%{$keysSampleKraken2R})) {
-		$keysSampleKraken2R->{$id}->{'program'} = "Kraken2"
+		$keysSampleKraken2R->{$id}->{'program'} = "Kraken 2"
 	}
 	
 	my $outKeysR = {};
@@ -5666,7 +5666,7 @@ sub test_insertTaxonomy {
 	
 	
 	#------------------------------------------------------------------------------#
-	# Test no maxRows with Kraken2 => optional argument
+	# Test no maxRows with Kraken 2 => optional argument
 	#------------------------------------------------------------------------------#
 	$isNew = 0;
 	
@@ -5695,14 +5695,14 @@ sub test_insertTaxonomy {
 	my %expecsKraken2 = %{$expecsKraken2R};
 	foreach my $class (keys (%expecsKraken2)) {
 		foreach my $id (keys (%{$expecsKraken2{$class}->{'_id_sequence_'}})) {
-			$expecsKraken2{$class}->{'_id_sequence_'}->{$id}->[0] = "Kraken2";
+			$expecsKraken2{$class}->{'_id_sequence_'}->{$id}->[0] = "Kraken 2";
 		}
 	}
-	# Kraken2 classification may not contain a taxon with no name at the last rank
+	# Kraken 2 classification may not contain a taxon with no name at the last rank
 	delete $expecsKraken2{"_class"};
 	$expecsKraken2{"c_f_1_class"}  = {
 		'_id_sequence_' => {
-			'12' => ['Kraken2', 'RDP']
+			'12' => ['Kraken 2', 'RDP']
 		},
 		'_id_taxonomy_' => undef
 	};
@@ -5780,7 +5780,7 @@ sub test_insertTaxonomy {
 		# Get the inserted data from the database
 		my $resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id_change FROM taxonomy ORDER BY key ASC");
 		my @res = map {$_->[0], $_->[1]} @{$resR};
-		is (\@res, \@expecsDataKraken2, 'Testing no maxRows with Kraken2 - data');
+		is (\@res, \@expecsDataKraken2, 'Testing no maxRows with Kraken 2 - data');
 		
 		# Get name_rank and id from database and update
 		# _id_taxonomy_ in %expecs
@@ -5790,13 +5790,13 @@ sub test_insertTaxonomy {
 			$expecsKraken2{$key}->{'_id_taxonomy_'} = $id
 		}
 		# Compare to keysR
-		is ($outKeysR, \%expecsKraken2, 'Testing no maxRows with Kraken2 - keys');
-		is ($isNew, 1, 'Testing no maxRows with Kraken2 - any new data inserted?');
+		is ($outKeysR, \%expecsKraken2, 'Testing no maxRows with Kraken 2 - keys');
+		is ($isNew, 1, 'Testing no maxRows with Kraken 2 - any new data inserted?');
 	}
 	catch {
 		$err = $_;
 		
-		ok(1==2, 'Testing no maxRows with Kraken2');
+		ok(1==2, 'Testing no maxRows with Kraken 2');
 		print "ERROR: $err" . "\n";
 	}
 	finally {
@@ -6006,7 +6006,7 @@ sub test_insertTaxonomy {
 	
 	
 	#------------------------------------------------------------------------------#
-	# Test empty taxonomy path with Kraken2 (not allowed)
+	# Test empty taxonomy path with Kraken 2 (not allowed)
 	#------------------------------------------------------------------------------#
 	try {
 		$err = "";
@@ -6016,7 +6016,7 @@ sub test_insertTaxonomy {
 		$err = $_;
 	}
 	finally {
-		ok ($err =~ m/ERROR.*Taxonomy path required for/, 'Testing empty taxonomy path with Kraken2');
+		ok ($err =~ m/ERROR.*Taxonomy path required for/, 'Testing empty taxonomy path with Kraken 2');
 	};
 	
 	
@@ -6429,7 +6429,7 @@ sub test_insertTaxonomy {
 				'number of run and barcode'	=> 'run01_bar01',
 				'height'					=> '30cm',
 				'_isControl_'				=> "f",
-				'program'					=> "Kraken2",
+				'program'					=> "Kraken 2",
 				'database'					=> 'RDP'
 			}	
 		};
@@ -6541,7 +6541,7 @@ sub test_insertTaxonomy {
 
 
 	#------------------------------------------------------------------------------#
-	# Valid insert for Kraken2: Two valid taxonomy ZIP archives per sample
+	# Valid insert for Kraken 2: Two valid taxonomy ZIP archives per sample
 	# (exemplary for other archive types, see tests for extractArchive)
 	# Includes: NULL values for taxon. Duplicates within INSERT (UNMATCHED).
 	#------------------------------------------------------------------------------#
@@ -6599,7 +6599,7 @@ sub test_insertTaxonomy {
 		# Get the inserted data from the database
 		my $resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id_change FROM taxonomy ORDER BY key ASC");
 		my @res = map {$_->[0], $_->[1]} @{$resR};
-		is (\@res, \@expecsDataKraken2, 'Testing valid new insert with Kraken2 - data');
+		is (\@res, \@expecsDataKraken2, 'Testing valid new insert with Kraken 2 - data');
 		
 		# Get name_rank and id from database and update
 		# _id_taxonomy_ in %expecs
@@ -6609,14 +6609,14 @@ sub test_insertTaxonomy {
 			$expecsKraken2{$key}->{'_id_taxonomy_'} = $id
 		}
 		# Compare to keysR
-		is ($outKeysR, \%expecsKraken2, 'Testing valid new insert with Kraken2 - keys');
+		is ($outKeysR, \%expecsKraken2, 'Testing valid new insert with Kraken 2 - keys');
 	
-		is ($isNew, 1, 'Testing valid new insert with Kraken2 - any new data inserted?');
+		is ($isNew, 1, 'Testing valid new insert with Kraken 2 - any new data inserted?');
 	}
 	catch {
 		$err = $_;
 		
-		ok (1==2, 'Testing valid new insert with Kraken2');
+		ok (1==2, 'Testing valid new insert with Kraken 2');
 		print "ERROR: $err" . "\n";
 	}
 	finally {
@@ -6711,7 +6711,7 @@ sub test_insertTaxonomy {
 	
 	
 	#------------------------------------------------------------------------------#
-	# Valid old insert with Kraken2: Two valid taxonomy ZIP archives per sample
+	# Valid old insert with Kraken 2: Two valid taxonomy ZIP archives per sample
 	# (exemplary for other archive types, see tests for extractArchive)
 	#------------------------------------------------------------------------------#
 	$isNew = 0;
@@ -6772,7 +6772,7 @@ sub test_insertTaxonomy {
 		# Get the inserted data from the database
 		my $resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id_change FROM taxonomy ORDER BY key ASC");
 		my @res = map {$_->[0], $_->[1]} @{$resR};
-		is (\@res, \@expecsDataKraken2, 'Testing valid old insert with Kraken2 - data');
+		is (\@res, \@expecsDataKraken2, 'Testing valid old insert with Kraken 2 - data');
 		
 		# Get name_rank and id from database and update
 		# _id_taxonomy_ in %expecs
@@ -6782,13 +6782,13 @@ sub test_insertTaxonomy {
 			$expecsKraken2{$key}->{'_id_taxonomy_'} = $id
 		}
 		# Compare to keysR
-		is ($outKeysR, \%expecsKraken2, 'Testing valid old insert with Kraken2 - keys');
-		is ($isNew, 0, 'Testing valid old insert with Kraken2 - any new data inserted?');
+		is ($outKeysR, \%expecsKraken2, 'Testing valid old insert with Kraken 2 - keys');
+		is ($isNew, 0, 'Testing valid old insert with Kraken 2 - any new data inserted?');
 	}
 	catch {
 		$err = $_;
 		
-		ok (1==2, 'Testing valid old insert with Kraken2');
+		ok (1==2, 'Testing valid old insert with Kraken 2');
 		print "ERROR: $err" . "\n";
 	}
 	finally {
@@ -6895,7 +6895,7 @@ sub test_insertTaxonomy {
 	
 	
 	#------------------------------------------------------------------------------#
-	# Valid insert with Kraken2, but one read in sequence file has no
+	# Valid insert with Kraken 2, but one read in sequence file has no
 	# classification => special taxon FILTERED for this read.
 	#------------------------------------------------------------------------------#
 	$isNew = 0;
@@ -6904,7 +6904,7 @@ sub test_insertTaxonomy {
 	my %expecsModKraken2 = %{dclone(\%expecsKraken2)};
 	foreach my $rank ("domain", "phylum", "class", "subclass", "order", "suborder", "family", "genus", "species", "strain") {
 		delete $expecsModKraken2{"UNMATCHED_" . $rank}->{'_id_sequence_'}->{16};
-		$expecsModKraken2{"FILTERED_" . $rank} = {'_id_sequence_' => {16 => ['Kraken2', 'RDP']}, '_id_taxonomy_' => undef};
+		$expecsModKraken2{"FILTERED_" . $rank} = {'_id_sequence_' => {16 => ['Kraken 2', 'RDP']}, '_id_taxonomy_' => undef};
 	}
 	@tmps = sort {$a cmp $b} keys(%expecsModKraken2);
 	my @expecsDataKraken2Mod = map {$_, $idChange} @tmps;
@@ -6975,13 +6975,13 @@ sub test_insertTaxonomy {
 			$expecsModKraken2{$key}->{'_id_taxonomy_'} = $id
 		}
 		# Compare to keysR
-		is ($outKeysR, \%expecsModKraken2, 'Testing one filtered read with Kraken2 - keys');
-		is ($isNew, 1, 'Testing one filtered read with Kraken2 - any new data inserted?');
+		is ($outKeysR, \%expecsModKraken2, 'Testing one filtered read with Kraken 2 - keys');
+		is ($isNew, 1, 'Testing one filtered read with Kraken 2 - any new data inserted?');
 	}
 	catch {
 		$err = $_;
 		
-		ok (1==2, 'Testing one filtered read with Kraken2');
+		ok (1==2, 'Testing one filtered read with Kraken 2');
 		print "ERROR: $err" . "\n";
 	}
 	finally {
@@ -7074,7 +7074,7 @@ sub test_insertTaxonomy {
 	
 	
 	#------------------------------------------------------------------------------#
-	# Test read IDs in sequence file and taxonomy file don't match with Kraken2
+	# Test read IDs in sequence file and taxonomy file don't match with Kraken 2
 	# => ERROR
 	#------------------------------------------------------------------------------#
 	$isNew = 0;
@@ -7091,7 +7091,7 @@ sub test_insertTaxonomy {
 		'number of run and barcode'	=> 'run04_bar01', # interpreted later as 'run04_bar99'
 		'height'					=> '36cm',
 		'_isControl_'				=> "t",
-		'program'					=> 'Kraken2',
+		'program'					=> 'Kraken 2',
 		'database'					=> 'RDP'
 	};
 	
@@ -7149,7 +7149,7 @@ sub test_insertTaxonomy {
 		$err = $_;
 	}
 	finally {
-		ok($err =~ m/ERROR.*read ID\(s\) do not match/, 'Testing not matching read IDs with Kraken2');
+		ok($err =~ m/ERROR.*read ID\(s\) do not match/, 'Testing not matching read IDs with Kraken 2');
 		$dbh->rollback;
 	};
 	
@@ -7467,7 +7467,7 @@ sub test_insertTaxonomy {
 	
 	
 	#------------------------------------------------------------------------------#
-	# Valid insert with Kraken2: Two valid, but empty, taxonomy ZIPs per sample
+	# Valid insert with Kraken 2: Two valid, but empty, taxonomy ZIPs per sample
 	# (exemplary for other archive types, see tests for extractArchive).
 	# => Insert special taxon FILTERED.
 	#------------------------------------------------------------------------------#
@@ -7476,7 +7476,7 @@ sub test_insertTaxonomy {
 	my $expecsModKraken2R = dclone(\%expecsModMetaG);
 	foreach my $class (keys(%{$expecsModKraken2R})) {
 		foreach my $id (keys %{$expecsModKraken2R->{$class}->{'_id_sequence_'}}) {
-			$expecsModKraken2R->{$class}->{'_id_sequence_'}->{$id}->[0] = 'Kraken2'
+			$expecsModKraken2R->{$class}->{'_id_sequence_'}->{$id}->[0] = 'Kraken 2'
 		}
 	};
 	%expecsModKraken2 = %{$expecsModKraken2R};
@@ -7549,7 +7549,7 @@ sub test_insertTaxonomy {
 		# Get the inserted data from the database
 		my $resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id_change FROM taxonomy ORDER BY key ASC");
 		my @res = map {$_->[0], $_->[1]} @{$resR};
-		is (\@res, \@expecsDataKraken2Mod, 'Testing empty taxonomy files with Kraken2 - data');
+		is (\@res, \@expecsDataKraken2Mod, 'Testing empty taxonomy files with Kraken 2 - data');
 		
 		# Get name_rank and id from database and update
 		# _id_taxonomy_ in %expecsMod
@@ -7559,13 +7559,13 @@ sub test_insertTaxonomy {
 			$expecsModKraken2{$key}->{'_id_taxonomy_'} = $id
 		}
 		# Compare to keysR
-		is ($outKeysR, \%expecsModKraken2, 'Testing empty taxonomy files with Kraken2 - keys');
-		is ($isNew, 1, 'Testing empty taxonomy files with Kraken2 - any new data inserted?');
+		is ($outKeysR, \%expecsModKraken2, 'Testing empty taxonomy files with Kraken 2 - keys');
+		is ($isNew, 1, 'Testing empty taxonomy files with Kraken 2 - any new data inserted?');
 	}
 	catch {
 		$err = $_;
 		
-		ok (1==2, 'Testing empty taxonomy files with Kraken2');
+		ok (1==2, 'Testing empty taxonomy files with Kraken 2');
 		print "ERROR: $err" . "\n";
 	}
 	finally {
@@ -7671,7 +7671,7 @@ sub test_insertTaxonomy {
 	
 	
 	#------------------------------------------------------------------------------#
-	# Valid insert with Kraken2: Two valid, taxonomy ZIPs per sample (exemplary for
+	# Valid insert with Kraken 2: Two valid, taxonomy ZIPs per sample (exemplary for
 	# other archive types, see tests for extractArchive) containing only
 	# whitespaces.
 	# => Insert special taxon FILTERED
@@ -7743,7 +7743,7 @@ sub test_insertTaxonomy {
 		# Get the inserted data from the database
 		my $resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id_change FROM taxonomy ORDER BY key ASC");
 		my @res = map {$_->[0], $_->[1]} @{$resR};
-		is (\@res, \@expecsDataKraken2Mod, 'Testing taxonomy files containing only whitespaces with Kraken2 - data');
+		is (\@res, \@expecsDataKraken2Mod, 'Testing taxonomy files containing only whitespaces with Kraken 2 - data');
 		
 		# Get name_rank and id from database and update
 		# _id_taxonomy_ in %expecsMod
@@ -7753,13 +7753,13 @@ sub test_insertTaxonomy {
 			$expecsModKraken2{$key}->{'_id_taxonomy_'} = $id
 		}
 		# Compare to keysR
-		is ($outKeysR, \%expecsModKraken2, 'Testing taxonomy files containing only whitespaces with Kraken2 - keys');
-		is ($isNew, 1, 'Testing taxonomy files containing only whitespaces with Kraken2 - any new data inserted?');
+		is ($outKeysR, \%expecsModKraken2, 'Testing taxonomy files containing only whitespaces with Kraken 2 - keys');
+		is ($isNew, 1, 'Testing taxonomy files containing only whitespaces with Kraken 2 - any new data inserted?');
 	}
 	catch {
 		$err = $_;
 		
-		ok (1==2, 'Testing taxonomy files containing only whitespaces with Kraken2');
+		ok (1==2, 'Testing taxonomy files containing only whitespaces with Kraken 2');
 		print "ERROR: $err" . "\n";
 	}
 	finally {
@@ -8067,8 +8067,8 @@ sub test_insertTaxonomy {
 
 
 	#------------------------------------------------------------------------------#
-	# Test missing files vs files containing whitespaces with Kraken2 (depends
-	# on previous Kraken2 test to produce the whitespace files).
+	# Test missing files vs files containing whitespaces with Kraken 2 (depends
+	# on previous Kraken 2 test to produce the whitespace files).
 	# => Reads related to missing taxonomy files should not get the special
 	# FILTERED taxon.
 	# Since classification files within one directory pattern are merged, all
@@ -8080,7 +8080,7 @@ sub test_insertTaxonomy {
 	%expecsModKraken2 = %{$expecsModKraken2R};
 	foreach my $class (keys(%expecsModKraken2)) {
 		foreach my $id (keys(%{$expecsModKraken2{$class}->{'_id_sequence_'}})) {
-			$expecsModKraken2{$class}->{'_id_sequence_'}->{$id}->[0] = 'Kraken2'
+			$expecsModKraken2{$class}->{'_id_sequence_'}->{$id}->[0] = 'Kraken 2'
 		}
 	}
 	@tmps = sort {$a cmp $b} keys(%expecsModKraken2);
@@ -8151,7 +8151,7 @@ sub test_insertTaxonomy {
 		# Get the inserted data from the database
 		my $resR = $dbh->selectall_arrayref("SELECT CONCAT(name, '_', rank) AS key, id_change FROM taxonomy ORDER BY key ASC");
 		my @res = map {$_->[0], $_->[1]} @{$resR};
-		is (\@res, \@expecsDataKraken2Mod, 'Testing missing vs file containing whitespaces with Kraken2 - data');
+		is (\@res, \@expecsDataKraken2Mod, 'Testing missing vs file containing whitespaces with Kraken 2 - data');
 		
 		# Get name_rank and id from database and update
 		# _id_taxonomy_ in %expecsMod
@@ -8161,13 +8161,13 @@ sub test_insertTaxonomy {
 			$expecsModKraken2{$key}->{'_id_taxonomy_'} = $id
 		}
 		# Compare to keysR
-		is ($outKeysR, \%expecsModKraken2, 'Testing missing vs file containing whitespaces with Kraken2 - keys');
-		is ($isNew, 1, 'Testing missing vs file containing whitespaces with Kraken2 - any new data inserted?');
+		is ($outKeysR, \%expecsModKraken2, 'Testing missing vs file containing whitespaces with Kraken 2 - keys');
+		is ($isNew, 1, 'Testing missing vs file containing whitespaces with Kraken 2 - any new data inserted?');
 	}
 	catch {
 		$err = $_;
 		
-		ok (1==2, 'Testing missing vs file containing whitespaces with Kraken2');
+		ok (1==2, 'Testing missing vs file containing whitespaces with Kraken 2');
 		print "ERROR: $err" . "\n";
 	}
 	finally {

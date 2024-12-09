@@ -107,7 +107,7 @@ USAGE
 						directory with "names.dmp" and "nodes.dmp"
 						files used by the classifier specified
 						as "program" in the spreadsheet (--table).
-						Mandatory when classifier is "kraken2";
+						Mandatory when classifier is "kraken 2";
 						ignored when it is "metag".
 						
 		--format|-f		OPTIONAL: Format of the table

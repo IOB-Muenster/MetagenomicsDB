@@ -4342,7 +4342,7 @@ sub test_class {
 	my $resChangeR = "";
 	
 	# Classifiers to be tested
-	my @classifiers = ('MetaG', 'Kraken2');
+	my @classifiers = ('MetaG', 'Kraken 2');
 	
 	# Control sample sequences inserted for every case sample
 	# alias, accession, birthdate, createdate, iscontrol, readid, runid, barcode, flowcellid, callermodel,
@@ -5324,7 +5324,7 @@ sub test_class {
 	];
 	my $expecClassKraken2R = dclone($expecClassMetaGR);
 	foreach my $ref (@{$expecClassKraken2R}){
-		$ref->[3] = "Kraken2";
+		$ref->[3] = "Kraken 2";
 	}
 	
 	my $expecClass_onePatMetaGR = [
@@ -5771,7 +5771,7 @@ sub test_class {
 	];
 	my $expecClass_onePatKraken2R = dclone($expecClass_onePatMetaGR);
 	foreach my $ref (@{$expecClass_onePatKraken2R}){
-		$ref->[3] = "Kraken2";
+		$ref->[3] = "Kraken 2";
 	}
 	
 	my $expecClass_oneSamplMetaGR = [
@@ -5818,7 +5818,7 @@ sub test_class {
 	];
 	my $expecClass_oneSamplKraken2R = dclone($expecClass_oneSamplMetaGR);
 	foreach my $ref (@{$expecClass_oneSamplKraken2R}){
-		$ref->[3] = "Kraken2";
+		$ref->[3] = "Kraken 2";
 	}
 	
 	# additional new classifications:
@@ -6748,7 +6748,7 @@ sub test_class {
 	];
 	my $expecClass_oneSampl_updatedKraken2R = dclone($expecClass_oneSampl_updatedMetaGR);
 	foreach my $ref (@{$expecClass_oneSampl_updatedKraken2R}){
-		$ref->[3] = "Kraken2";
+		$ref->[3] = "Kraken 2";
 	}
 	
 	# additional new classifications:
@@ -8078,7 +8078,7 @@ sub test_class {
 	];
 	my $expecClass_onePat_updatedKraken2R = dclone($expecClass_onePat_updatedMetaGR);
 	foreach my $ref (@{$expecClass_onePat_updatedKraken2R}){
-		$ref->[3] = "Kraken2";
+		$ref->[3] = "Kraken 2";
 	}
 	
 	# additional new classifications:
@@ -9847,7 +9847,7 @@ sub test_class {
 	];
 	my $expecClass_updatedKraken2R = dclone($expecClass_updatedMetaGR);
 	foreach my $ref (@{$expecClass_updatedKraken2R}){
-		$ref->[3] = "Kraken2";
+		$ref->[3] = "Kraken 2";
 	}
 	
 	# additional new classifications with database MTX:
@@ -10777,7 +10777,7 @@ sub test_class {
 	];
 	my $expecClass_updatedClassDb_oneSamplKraken2R = dclone($expecClass_updatedClassDb_oneSamplMetaGR);
 	foreach my $ref (@{$expecClass_updatedClassDb_oneSamplKraken2R}){
-		$ref->[3] = "Kraken2";
+		$ref->[3] = "Kraken 2";
 	}
 	
 	my $expecClass_updatedClassDb_onePatMetaGR = [
@@ -12104,7 +12104,7 @@ sub test_class {
 	];
 	my $expecClass_updatedClassDb_onePatKraken2R = dclone($expecClass_updatedClassDb_onePatMetaGR);
 	foreach my $ref (@{$expecClass_updatedClassDb_onePatKraken2R}){
-		$ref->[3] = "Kraken2";
+		$ref->[3] = "Kraken 2";
 	}
 	
 	my $expecClass_updatedClassDbMetaGR = [
@@ -13871,7 +13871,7 @@ sub test_class {
 	];
 	my $expecClass_updatedClassDbKraken2R = dclone($expecClass_updatedClassDbMetaGR);
 	foreach my $ref (@{$expecClass_updatedClassDbKraken2R}){
-		$ref->[3] = "Kraken2";
+		$ref->[3] = "Kraken 2";
 	}
 	
 	
@@ -13892,7 +13892,7 @@ sub test_class {
 		foreach my $ref (@{$expec}) {
 			if ($ref->[4] eq "MTX") {
 				$ref->[4] = "RDP";
-				$ref->[3] = "Kraken2"
+				$ref->[3] = "Kraken 2"
 			}
 		}
 		my @tmps = sort sort_expec_db_style @{$expec};
@@ -13941,7 +13941,7 @@ sub test_class {
 			'expecClass_updatedClassPrgrm_oneSamplR'		=> 	$expecClass_updatedClassPrgrm_oneSamplMetaGR,
 			'err_noClass'									=>	'^((WARNING: ERROR: No results for directory pattern .* and file pattern ->\.\*calc\\\.LIN\\\.txt\.\*<- at .* line \d+\.)\s+)+$'
 		},
-		'Kraken2'	=>	{
+		'Kraken 2'	=>	{
 			'expecClassR'									=>	$expecClassKraken2R,
 			'expecClass_onePatR'							=>	$expecClass_onePatKraken2R,
 			'expecClass_oneSamplR'							=>	$expecClass_oneSamplKraken2R,
@@ -13974,7 +13974,7 @@ sub test_class {
 			'testF_updClassPrgrm_onePat'	=>	'./data/spreadsheets/test_SGA_updatedClassPrgrm_onePat_MetaG.xlsx',
 			'testF_updClassPrgrm_oneSampl'	=>	'./data/spreadsheets/test_SGA_updatedClassPrgrm_oneSampl_MetaG.xlsx'
 		},
-		"Kraken2" => {
+		"Kraken 2" => {
 			'testF_seq'						=>	'./data/spreadsheets/test_SGA_Kraken2.xlsx',
 			'testF_seq_onePat'				=>	'./data/spreadsheets/test_SGA_onePat_Kraken2.xlsx',
 			'testF_seq_oneSampl'			=>	'./data/spreadsheets/test_SGA_oneSampl_Kraken2.xlsx',
@@ -14408,7 +14408,7 @@ sub test_class {
 	
 	
 	#------------------------------------------------------------------------------#
-	# Taxonomy path required for Kraken2
+	# Taxonomy path required for Kraken 2
 	#------------------------------------------------------------------------------#	
 	try {
 		$err = "";
@@ -14419,7 +14419,7 @@ sub test_class {
 		$resChangeR = "";
 					
 		$err = qx{export PERL5LIB="$lib"; \\
-			perl ../importSGA.pl --debug --verbose --table $files{'Kraken2'}->{'testF_seq'} \\
+			perl ../importSGA.pl --debug --verbose --table $files{'Kraken 2'}->{'testF_seq'} \\
 				--data $basePath --format xlsx \\
 				--whogirls ./data/spreadsheets/whogirls.xlsx --whoboys ./data/spreadsheets/whoboys.xlsx \\
 				2>&1 1>/dev/null
@@ -14471,12 +14471,12 @@ sub test_class {
 		$err .= $_;
 	}
 	finally {
-		ok ($err =~ m/^ERROR.*Rolling back due to .*Taxonomy path required for/, 'Testing taxonomy path required for Kraken2 - error msg');
-		is ($resChangeR, [],	'Testing taxonomy path required for Kraken2 - new data inserted?');
-		is ($resR, [], 'Testing taxonomy path required for Kraken2 - measurements');
-		is ($resDerivedR, [], 'Testing taxonomy path required for Kraken2 - derived measurements');
-		is ($resSeqR, [], 'Testing taxonomy path required for Kraken2 - sequences');
-		is ($resClassR, [], 'Testing taxonomy path required for Kraken2 - classifications');
+		ok ($err =~ m/^ERROR.*Rolling back due to .*Taxonomy path required for/, 'Testing taxonomy path required for Kraken 2 - error msg');
+		is ($resChangeR, [],	'Testing taxonomy path required for Kraken 2 - new data inserted?');
+		is ($resR, [], 'Testing taxonomy path required for Kraken 2 - measurements');
+		is ($resDerivedR, [], 'Testing taxonomy path required for Kraken 2 - derived measurements');
+		is ($resSeqR, [], 'Testing taxonomy path required for Kraken 2 - sequences');
+		is ($resClassR, [], 'Testing taxonomy path required for Kraken 2 - classifications');
 	};
 
 
