@@ -76,8 +76,8 @@ best installed via apt.</br>
 
 The rest can be installed via cpanm. Please ignore the first line, if cpanm is already installed on your system.</br>
 <code>
-# cpan App::cpanminus</br>
-# perlModules=( \</br>
+\# cpan App::cpanminus</br>
+\# perlModules=( \</br>
 &nbsp;&nbsp;"Archive::Extract" \</br>
 &nbsp;&nbsp;"Archive::Zip" \</br>
 &nbsp;&nbsp;"DBI" \</br>
@@ -97,7 +97,7 @@ The rest can be installed via cpanm. Please ignore the first line, if cpanm is a
 &nbsp;&nbsp;"Test2::Bundle::More" \</br>
 &nbsp;&nbsp;"Try::Tiny" \</br>
 ); \</br>
-# for module in ${perlModules[@]}; do
+\# for module in ${perlModules[@]}; do
         cpanm ${module} 2>/dev/null || { printf "ERROR: Could not install ${module}"; exit 1; }; done
 </code>
 
