@@ -25,17 +25,14 @@ You also need a driver for Perl and the plperl extension for PostgreSQL.
 `# apt install libdbd-pg-perl postgresql-plperl`
 
 Now, confirm that PostgreSQL is running and setup a login as non-root with a password of your choice (here: "postgres").</br>
-
 <code>
 # service postgresql status</br>
 # su postgres</br>
 psql -c 'ALTER USER postgres PASSWORD $$postgres$$';
 </code></br>
-
 Exit psql and login as the regular user with whom you want to use MetagenomicsDB. Create a
 [".pg_service.conf"](https://www.postgresql.org/docs/current/libpq-pgservice.html) file in the user's home directory. The file is used
 by MetagenomicsDB to find the test and production databases. If you installed PostgreSQL locally, the file could look like this.</br>
-
 <code>
 [debug]</br>
 host=localhost</br>
@@ -52,12 +49,11 @@ password=postgres</br>
 
 Next, please login as the postgres user and create the test (debug) and the production (metagdb) databases. If you use an existing
 installation of PostgreSQL, please make sure that these databases ("dbname" in previous file) are not already in use.</br>
-
 <code>
 su - -c 'su postgres'</br>
 psql -c 'CREATE DATABASE debug WITH LC_COLLATE = $$C.UTF-8$$ TEMPLATE = template0'</br>
 psql -c 'CREATE DATABASE metagenomicsDB WITH LC_COLLATE = $$C.UTF-8$$ TEMPLATE = template0'</br>
-</code>
+</code></br>
 
 You can now exit psql. In order to change the error messages to English which is a requirement, please make sure your
 PostgreSQL configuration file contains the line "lc_messages = 'C.UTF-8'". You can find the file here:</br>
@@ -78,7 +74,6 @@ best installed via apt.</br>
 `# apt install libperlio-gzip-perl libparams-validationcompiler-perl libmodule-pluggable-perl`
 
 The rest can be installed via cpanm. Please ignore the first line, if cpanm is already installed on your system.</br>
-
 <code>
 # cpan App::cpanminus</br>
 # perlModules=( \</br>
@@ -128,7 +123,6 @@ functions in the production database using the provided schema.</br>
 `psql service=metagdb < www-intern/db/schema.sql`
 
 Now insert the files with the test data using either</br>
-
 <code>
 ./bin/importSGA.pl \</br>
 &nbsp;&nbsp;--table install/testdata/TestdataMeasurements_MetaG.ods \</br>
@@ -137,10 +131,8 @@ Now insert the files with the test data using either</br>
 &nbsp;&nbsp;--whogirls install/testdata/data/wfa-girls-zscore-expanded-tables.xlsx \</br>
 &nbsp;&nbsp;--whoboys install/testdata/data/wfa-boys-zscore-expanded-tables.xlsx \</br>
 &nbsp;&nbsp;--verbose
-</code>
-
+</code></br>
 for MetaG or</br>
-
 <code>
 ./bin/importSGA.pl \</br>
 &nbsp;&nbsp;--table install/testdata/TestdataMeasurements_Kraken2.ods \</br>
@@ -150,8 +142,7 @@ for MetaG or</br>
 &nbsp;&nbsp;--whogirls install/testdata/data/wfa-girls-zscore-expanded-tables.xlsx \</br>
 &nbsp;&nbsp;--whoboys install/testdata/data/wfa-boys-zscore-expanded-tables.xlsx \</br>
 &nbsp;&nbsp;--verbose
-</code>
-
+</code></br>
 for Kraken 2.
 
 
@@ -160,14 +151,12 @@ For the purpose of this example, all samples shall be exported from the database
 [MicrobiomeAnalyst](https://doi.org/10.1093/nar/gkad407). The export script requires to specify
 a list of id numbers. Here, however, an in-line psql statement is used to avoid having to
 type all id number manually.</br>
-
 <code>
 ./bin/exportSGA.pl \</br>
 &nbsp;&nbsp;--format microbiomeanalyst \</br>
 &nbsp;&nbsp;--ids $(psql service=metagdb -t -c 'SELECT string_agg(id::text, $$,$$::text) FROM sample') \</br>
 &nbsp;&nbsp;> ../microbiomeanalyst.zip
-</code>
-
+</code></br>
 Extract the archive and upload the files to the
 [Marker Data Profiling](https://www.microbiomeanalyst.ca/MicrobiomeAnalyst/upload/OtuUploadView.xhtml)
 workflow in MicrobiomeAnalyst as shown here. Please note the setting for "Taxonomy labels."
