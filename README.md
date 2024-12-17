@@ -49,15 +49,13 @@ password=postgres</br>
 
 Next, please login as the postgres user and create the test (debug) and the production (metagdb) databases. If you use an existing
 installation of PostgreSQL, please make sure that these databases ("dbname" in previous file) are not already in use.</br>
-
 <code>
 su - -c 'su postgres'</br>
 psql -c 'CREATE DATABASE debug WITH LC_COLLATE = $$C.UTF-8$$ TEMPLATE = template0'</br>
 psql -c 'CREATE DATABASE metagenomicsDB WITH LC_COLLATE = $$C.UTF-8$$ TEMPLATE = template0'</br>
-</code>
-
+</code></br>
 You can now exit psql. In order to change the error messages to English which is a requirement, please make sure your
-PostgreSQL configuration file contains the line "lc_messages = 'C.UTF-8'". You can find the file here:</br>
+PostgreSQL configuration file contains the line "lc_messages = 'C.UTF-8'." You can find the file here:</br>
 
 `# find / -name postgresql.conf`
 
