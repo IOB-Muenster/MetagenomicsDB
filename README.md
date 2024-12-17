@@ -75,26 +75,26 @@ best installed via apt.</br>
 The rest can be installed via cpanm. Please ignore the first line, if cpanm is already installed on your system.</br>
 <code>
 \# cpan App::cpanminus</br>
-\# perlModules=( \</br>
-&nbsp;&nbsp;"Archive::Extract" \</br>
-&nbsp;&nbsp;"Archive::Zip" \</br>
-&nbsp;&nbsp;"DBI" \</br>
-&nbsp;&nbsp;"DateTime::Duration" \</br>
-&nbsp;&nbsp;"DateTime::Format::ISO8601" \</br>
-&nbsp;&nbsp;"Encode" \</br>
-&nbsp;&nbsp;"File::Type" \</br>
-&nbsp;&nbsp;"Git::Version::Compare" \</br>
-&nbsp;&nbsp;"IO::Handle" \</br>
-&nbsp;&nbsp;"IO::Scalar" \</br>
-&nbsp;&nbsp;"IO::Uncompress::AnyUncompress" \</br>
-&nbsp;&nbsp;"Spreadsheet::Read" \</br>
-&nbsp;&nbsp;"Spreadsheet::ParseExcel" \</br>
-&nbsp;&nbsp;"Spreadsheet::ParseODS" \</br>
-&nbsp;&nbsp;"Spreadsheet::ParseXLSX" \</br>
-&nbsp;&nbsp;"Text::CSV_XS" \</br>
-&nbsp;&nbsp;"Test2::Bundle::More" \</br>
-&nbsp;&nbsp;"Try::Tiny" \</br>
-); \</br>
+\# perlModules=( \\</br>
+&nbsp;&nbsp;"Archive::Extract" \\</br>
+&nbsp;&nbsp;"Archive::Zip" \\</br>
+&nbsp;&nbsp;"DBI" \\</br>
+&nbsp;&nbsp;"DateTime::Duration" \\</br>
+&nbsp;&nbsp;"DateTime::Format::ISO8601" \\</br>
+&nbsp;&nbsp;"Encode" \\</br>
+&nbsp;&nbsp;"File::Type" \\</br>
+&nbsp;&nbsp;"Git::Version::Compare" \\</br>
+&nbsp;&nbsp;"IO::Handle" \\</br>
+&nbsp;&nbsp;"IO::Scalar" \\</br>
+&nbsp;&nbsp;"IO::Uncompress::AnyUncompress" \\</br>
+&nbsp;&nbsp;"Spreadsheet::Read" \\</br>
+&nbsp;&nbsp;"Spreadsheet::ParseExcel" \\</br>
+&nbsp;&nbsp;"Spreadsheet::ParseODS" \\</br>
+&nbsp;&nbsp;"Spreadsheet::ParseXLSX" \\</br>
+&nbsp;&nbsp;"Text::CSV_XS" \\</br>
+&nbsp;&nbsp;"Test2::Bundle::More" \\</br>
+&nbsp;&nbsp;"Try::Tiny" \\</br>
+); \\</br>
 \# for module in ${perlModules[@]}; do
         cpanm ${module} 2>/dev/null || { printf "ERROR: Could not install ${module}"; exit 1; }; done
 </code>
@@ -123,23 +123,23 @@ functions in the production database using the provided schema.</br>
 
 Now insert the files with the test data using either</br>
 <code>
-./bin/importSGA.pl \</br>
-&nbsp;&nbsp;--table install/testdata/TestdataMeasurements_MetaG.ods \</br>
-&nbsp;&nbsp;--data install/testdata/data \</br>
-&nbsp;&nbsp;--format ods \</br>
-&nbsp;&nbsp;--whogirls install/testdata/data/wfa-girls-zscore-expanded-tables.xlsx \</br>
-&nbsp;&nbsp;--whoboys install/testdata/data/wfa-boys-zscore-expanded-tables.xlsx \</br>
+./bin/importSGA.pl \\</br>
+&nbsp;&nbsp;--table install/testdata/TestdataMeasurements_MetaG.ods \\</br>
+&nbsp;&nbsp;--data install/testdata/data \\</br>
+&nbsp;&nbsp;--format ods \\</br>
+&nbsp;&nbsp;--whogirls install/testdata/data/wfa-girls-zscore-expanded-tables.xlsx \\</br>
+&nbsp;&nbsp;--whoboys install/testdata/data/wfa-boys-zscore-expanded-tables.xlsx \\</br>
 &nbsp;&nbsp;--verbose
 </code></br>
 for MetaG or</br>
 <code>
-./bin/importSGA.pl \</br>
-&nbsp;&nbsp;--table install/testdata/TestdataMeasurements_Kraken2.ods \</br>
-&nbsp;&nbsp;--data install/testdata/data \</br>
-&nbsp;&nbsp;--taxonomy install/testdata/data/taxonomy/kraken2/rdp/taxonomy \</br>
-&nbsp;&nbsp;--format ods \</br>
-&nbsp;&nbsp;--whogirls install/testdata/data/wfa-girls-zscore-expanded-tables.xlsx \</br>
-&nbsp;&nbsp;--whoboys install/testdata/data/wfa-boys-zscore-expanded-tables.xlsx \</br>
+./bin/importSGA.pl \\</br>
+&nbsp;&nbsp;--table install/testdata/TestdataMeasurements_Kraken2.ods \\</br>
+&nbsp;&nbsp;--data install/testdata/data \\</br>
+&nbsp;&nbsp;--taxonomy install/testdata/data/taxonomy/kraken2/rdp/taxonomy \\</br>
+&nbsp;&nbsp;--format ods \\</br>
+&nbsp;&nbsp;--whogirls install/testdata/data/wfa-girls-zscore-expanded-tables.xlsx \\</br>
+&nbsp;&nbsp;--whoboys install/testdata/data/wfa-boys-zscore-expanded-tables.xlsx \\</br>
 &nbsp;&nbsp;--verbose
 </code></br>
 for Kraken 2.
@@ -151,9 +151,9 @@ For the purpose of this example, all samples shall be exported from the database
 a list of id numbers. Here, however, an in-line psql statement is used to avoid having to
 type all id number manually.</br>
 <code>
-./bin/exportSGA.pl \</br>
-&nbsp;&nbsp;--format microbiomeanalyst \</br>
-&nbsp;&nbsp;--ids $(psql service=metagdb -t -c 'SELECT string_agg(id::text, $$,$$::text) FROM sample') \</br>
+./bin/exportSGA.pl \\</br>
+&nbsp;&nbsp;--format microbiomeanalyst \\</br>
+&nbsp;&nbsp;--ids $(psql service=metagdb -t -c 'SELECT string_agg(id::text, $$,$$::text) FROM sample') \\</br>
 &nbsp;&nbsp;> ../microbiomeanalyst.zip
 </code></br>
 Extract the archive and upload the files to the
