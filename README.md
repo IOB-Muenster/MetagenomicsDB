@@ -149,7 +149,7 @@ for Kraken 2.
 For the purpose of this example, all samples shall be exported from the database to
 [MicrobiomeAnalyst](https://doi.org/10.1093/nar/gkad407). The export script requires to specify
 a list of id numbers. Here, however, an in-line psql statement is used to avoid having to
-type all id number manually.</br>
+type all id numbers manually.</br>
 <code>
 ./bin/exportSGA.pl \\</br>
 &nbsp;&nbsp;--format microbiomeanalyst \\</br>
@@ -166,7 +166,7 @@ Typically, you may wish to create a custom web interface. For this, please have 
 example mentioned before. Consult our publication including the Supplementary Methods (see below) for a
 detailed description of the underlying rational. In order to customize the functionality of MetagenomicsDB,
 please read the descriptions in the publication and the Supplementary Methods. The aforementioned tests
-will assist you in the software development, as they will readily show, if some basic functional got lost by
+will assist you in the software development, as they will readily show, if some basic functionality got lost by
 your adjustments. If you think that your changes are useful for a wider audience, please open a pull request.
 
 ## Publication
@@ -183,7 +183,7 @@ The files "whoboys.xlsx" and "whogirls.xlsx" in "bin/tests/data/spreadsheets/" a
 The Kraken 2 taxonomy files "names.dmp" and "nodes.dmp" in
 "install/testdata/data/taxonomy/kraken2/rdp/taxonomy" were created with kraken2-build
 version 2.1.3 based on unaligned sequence FASTA files for bacteria, archaea, and fungi from
-[RDP version 11.5](https://rdp.cme.msu.edu/misc/resources.jsp) on 2021/11/24.</br>
+[RDP version 11.5](https://rdp.cme.msu.edu/misc/resources.jsp) downloaded on 2021/11/24.</br>
 
 For the remaining files, unless stated otherwise, the following copyright agreement applies: 
 
