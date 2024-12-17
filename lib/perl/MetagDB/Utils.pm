@@ -28,29 +28,16 @@ package MetagDB::Utils;
 sub toSQL {
 	my ($value, $type) = @_;
 
-	return "null" if (!defined $value);
+	return "null" if (!defined $value or !defined $type);
 
-	if ($type eq "b") {
-		return $value =~ m/^(t|true|y|yes|on|1)$/ ? "TRUE" : "FALSE";
-	}
-	elsif ($type eq "d") {
-		my @a = split(/\-/, $value);
-		return sprintf("'%04d-%02d-%02d'", $a[2], $a[1], $a[0]);
-	}
-	elsif ($type eq "s") {
-		$value =~ s/'/''/g;
-		return qq('$value');
-	}
-	elsif ($type eq "ts") {
-		$value =~ m/(\d+).+?(\d+).+?(\d+).+?(\d+).+?(\d+).+?(\d+)/;
-		return int(timelocal($6, $5, $4, $3, $2 - 1, $1));
-	}
-	elsif ($type eq "ip") {
+	if ($type eq "ip") {
 		my @a = split(/\./, $value);
 		return 0 if (@a != 4);
 		return int((($a[3] * 256 + $a[2]) * 256 + $a[1]) * 256 + $a[0]);
 	}
-	return "$value";
+	else {
+		return 0
+	}
 }
 
 1;
