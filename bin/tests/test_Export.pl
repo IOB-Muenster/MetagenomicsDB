@@ -207,9 +207,34 @@ sub test_otuTab {
 	
 	
 	#------------------------------------------------------------------------------#
+	# Test remove blanks from sample name
+	#------------------------------------------------------------------------------#
+	my $classModR = {};
+	foreach my $key (keys(%{$classR})) {
+		$classModR->{" " . $key . " "} = dclone ($classR->{$key});
+	};
+	
+	try {
+		$err = "";
+		$resTab = "";
+		$resIDsR = {};
+		($resTab, $resIDsR) = MetagDB::Export::otuTab($classModR, $header);
+	}
+	catch {
+		$err = $_;
+		print $err;
+		ok(1==2, "Testing to remove blanks from header");
+	}
+	finally {
+		is ($resTab, $expecsTab, 'Testing to remove blanks from header - OTU table');
+		is ($resIDsR, $expecsIDsR, 'Testing to remove blanks from header - ID mapping');
+	};
+	
+	
+	#------------------------------------------------------------------------------#
 	# Test empty sample name
 	#------------------------------------------------------------------------------#
-	my $classModR = dclone($classR);
+	$classModR = dclone($classR);
 	$classModR->{""} = {"C1" => 0};
 	
 	try {
@@ -774,6 +799,29 @@ sub test_metadata {
 	
 	
 	#------------------------------------------------------------------------------#
+	# Test remove blanks from sample name
+	#------------------------------------------------------------------------------#
+	$metasModR = {};
+	foreach my $key (keys(%{$metasR})) {
+		$metasModR->{" " . $key . " "} = dclone($metasR->{$key});
+	}
+	
+	try {
+		$err = "";
+		$res = "";
+		$res = MetagDB::Export::metadata($metasModR, $header);
+	}
+	catch {
+		$err = $_;
+		print $err;
+		ok (1==2, 'Testing to remove blanks from sample name');
+	}
+	finally {
+		is ($res, $expec, 'Testing to remove blanks from sample name')
+	};
+	
+	
+	#------------------------------------------------------------------------------#
 	# Test invalid sample name
 	#------------------------------------------------------------------------------#
 	$metasModR = dclone($metasR);
@@ -835,7 +883,7 @@ sub test_metadata {
 
 #
 #--------------------------------------------------------------------------------------------------#
-# Test metadata function
+# Test webVis function
 #--------------------------------------------------------------------------------------------------#
 #
 sub test_webVis {
@@ -844,14 +892,14 @@ sub test_webVis {
 	
 	my $classR = {
 		1 => {
-			"S1"	=>	{
+			" S1 "	=>	{
 				"K1;P1;C1;O1;F1;G1;S1"	=> 1,
 				"K2;P2;C2;O2;F2;G2;S2"	=> 0,
 				"K11;P11;C11;O11;F11;G11;S11"	=> 11
 			}
 		},
 		2 => {
-			"S2"	=> {
+			"S 2"	=> {
 				"K1;P1;C1;O1;F1;G1;S1"	=> 0,
 				"K2;P2;C2;O2;F2;G2;S2"	=> 2,
 				"K22;P22;C22;O22;F22;G22;S22"	=> 22
@@ -867,14 +915,14 @@ sub test_webVis {
 	};
 	my $metasR = {
 		1 => {
-			"S1"	=> {
+			" S1 "	=> {
 				"M1" => "V1",
 				"M11" => "V11",
 				"z_score_category" => "SGA"
 			}
 		},
 		2 => {
-			"S2"	=> {
+			"S 2"	=> {
 				"M1" => "V1",
 				"M11" => "V11",
 				"M2" => "V2",

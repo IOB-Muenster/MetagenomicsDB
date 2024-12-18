@@ -113,7 +113,7 @@ sub otuTab ($classR, $header) {
 	my @classifications = sort keys(%tmps);
 	# Columns in OTU tab: All samples, even those with 0 counts for particular OTUs
 	my @samples = sort keys(%class);
-	$header .= "\t" . join("\t", @samples);
+	$header .= "\t" . join("\t", map {$_ =~ s/ //gr} @samples);
 	
 	my $otuTab = $header . "\n";
 	my %classIDs = ();
@@ -306,7 +306,8 @@ sub metadata($metasR, $header) {
 	$header .= "\t" . $primeMeta . "\t" . join("\t", @metaNs);
 	my $metaTab = $header . "\n";
 	foreach my $sample (@samples) {
-		$metaTab .= $sample . "\t" . ($metas{$sample}->{$primeMeta} || "NA");
+		my $sampleN = $sample =~ s/ //gr;
+		$metaTab .= $sampleN . "\t" . ($metas{$sample}->{$primeMeta} || "NA");
 		foreach my $metaN (@metaNs) {
 			if (exists $metas{$sample}->{$metaN}) {
 				# NA for empty/undefined metadata value
