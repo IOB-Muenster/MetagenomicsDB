@@ -432,21 +432,17 @@ sub webVis ($classR, $metasR, $tool) {
 	my %classNew = ();
 	my %metasNew = ();
 	foreach my $id (keys(%class)) {
-		die "ERROR: Each ID in classifications must have exactly one sample name"
-			if (scalar (keys %{$class{$id}}) != 1);
 		foreach my $name (keys %{$class{$id}}) {
+			die "ERROR: Sample names must be unique." if (exists $classNew{$name});
 			$classNew{$name} = $class{$id}->{$name}
 		}
 	}
 	foreach my $id (keys(%metas)) {
-		die "ERROR: Each ID in metadata must have exactly one sample name"
-			if (scalar (keys %{$metas{$id}}) != 1);
 		foreach my $name (keys %{$metas{$id}}) {
+			die "ERROR: Sample names must be unique." if (exists $metasNew{$name});
 			$metasNew{$name} = $metas{$id}->{$name}
 		}
 	}
-	die "ERROR: Sample names in classifications not unique" if (scalar(keys(%class)) != scalar(keys(%classNew)));
-	die "ERROR: Sample names in metadata not unique" if (scalar(keys(%metas)) != scalar(keys(%metasNew)));
 	
 	# Sanity check: Metadata should contain the same samples as classifications
 	my $tmp = join("\t", sort keys(%classNew));

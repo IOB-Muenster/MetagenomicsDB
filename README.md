@@ -116,12 +116,12 @@ The "install/testdata" directory contains <b>artificial example data</b> which y
 system. The Supplementary Methods of our publication describe, how the data was created. Two data sets are
 available. In one set, sequences were analyzed by the [MetaG classifier](https://doi.org/10.1101/2020.03.13.991190).
 In the other, sequences were analyzed by [Kraken 2](https://doi.org/10.1186/s13059-019-1891-0).
-Please decide on one of the data sets. Before you can continue, you need to create the relations, views, and
-functions in the production database using the provided schema.</br>
+Before you can continue, you need to create the relations, views, and functions in the production database
+using the provided schema.</br>
 
 `psql service=metagdb < www-intern/db/schema.sql`
 
-Now insert the files with the test data using either</br>
+Now insert the files with the test data using</br>
 <code>
 ./bin/importSGA.pl \\</br>
 &nbsp;&nbsp;--table install/testdata/TestdataMeasurements_MetaG.ods \\</br>
@@ -131,7 +131,7 @@ Now insert the files with the test data using either</br>
 &nbsp;&nbsp;--whoboys install/testdata/data/wfa-boys-zscore-expanded-tables.xlsx \\</br>
 &nbsp;&nbsp;--verbose
 </code></br>
-for MetaG or</br>
+for MetaG and/or</br>
 <code>
 ./bin/importSGA.pl \\</br>
 &nbsp;&nbsp;--table install/testdata/TestdataMeasurements_Kraken2.ods \\</br>

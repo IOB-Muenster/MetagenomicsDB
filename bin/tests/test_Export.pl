@@ -1029,20 +1029,53 @@ sub test_webVis {
 	
 	
 	#------------------------------------------------------------------------------#
-	# Test classifications invalid format: More than one sample name for ID
+	# Test classifications valid format: Multiple sample names for one sample ID
+	# at the example of MicrobiomeAnalyst.
 	#------------------------------------------------------------------------------#
 	my $classModR = dclone($classR);
-	$classModR->{"1"} = {"foobar" => {}, "barfoo" => {}};
+	# Move sample name from sample ID 2 to ID 1.
+	# Metadata reference does not need to be changed:
+	# merged by sample name, not sample ID.
+	$classModR->{"1"}->{"S 2"} = {
+		"K1;P1;C1;O1;F1;G1;S1"	=> 0,
+		"K2;P2;C2;O2;F2;G2;S2"	=> 2,
+		"K22;P22;C22;O22;F22;G22;S22"	=> 22
+	};
+	delete $classModR->{"2"};
+	
+	my $expecOTU = "#NAME\tS1\tS2\tS3\n" .
+		"OTU0\t11\t0\t0\n" .
+		"OTU1\t1\t0\t3\n" .
+		"OTU2\t0\t22\t0\n" .
+		"OTU3\t0\t2\t0\n" .
+		"OTU4\t0\t0\t33";
+	my $expecTax = "#TAXONOMY\tKingdom\tPhylum\tClass\tOrder\tFamily\tGenus\tSpecies\n" .
+		"OTU0\tK11\tP11\tC11\tO11\tF11\tG11\tS11\n" .
+		"OTU1\tK1\tP1\tC1\tO1\tF1\tG1\tS1\n" .
+		"OTU2\tK22\tP22\tC22\tO22\tF22\tG22\tS22\n" .
+		"OTU3\tK2\tP2\tC2\tO2\tF2\tG2\tS2\n" .
+		"OTU4\tK33\tP33\tC33\tO33\tF33\tG33\tS33";
+	my $expecMeta = "#NAME\tz_score_category\tM1\tM11\tM2\n" .
+		"S1\tSGA\tV1\tV11\tNA\n" .
+		"S2\tAGA\tV1\tV11\tV2\n" .
+		"S3\tNA\tNA\tNA\tNA";
+
+	my ($resOTU, $resTax, $resMeta) = ("") x 3;
 	
 	try {
 		$err = "";
-		MetagDB::Export::webVis($classModR, $metasR, $tool);
+		($resOTU, $resTax, $resMeta) = ("") x 3;
+		($resOTU, $resTax, $resMeta) = MetagDB::Export::webVis($classModR, $metasR, "MicrobiomeAnalyst");
 	}
 	catch {
 		$err = $_;
+		print $err;
+		ok(1==2, 'Testing classifications with multiple sample names per ID');
 	}
 	finally {
-		ok ($err =~ m/^ERROR.*Each ID in classifications/, 'Testing classifications invalid format [1/2]');
+		is ($resOTU, $expecOTU, 'Testing classifications with multiple sample names per ID - OTU');
+		is ($resTax, $expecTax, 'Testing classifications with multiple sample names per ID - taxonomy');
+		is ($resMeta, $expecMeta, 'Testing classifications with multiple sample names per ID - metadata');
 	};
 	
 	
@@ -1060,7 +1093,7 @@ sub test_webVis {
 		$err = $_;
 	}
 	finally {
-		ok ($err =~ m/^ERROR.*Sample names in classifications not unique/, 'Testing classifications invalid format [2/2]');
+		ok ($err =~ m/^ERROR.*Sample names must be unique/, 'Testing sample names not unique');
 	};
 
 	
@@ -1110,21 +1143,36 @@ sub test_webVis {
 	
 	
 	#------------------------------------------------------------------------------#
-	# Test metadata invalid format: More than one sample name for ID
+	# Test metadata valid format: Multiple sample names for one sample ID at the
+	# example of MicrobiomeAnalyst.
 	#------------------------------------------------------------------------------#
 	my $metasModR = dclone($metasR);
-	$metasModR->{"1"} = {"foobar" => {}, "barfoo" => {}};
+	# Move sample name from sample ID 2 to ID 1.
+	# Classification reference does not need to be changed:
+	# merged by sample name, not sample ID.
+	$metasModR->{"1"}->{"S 2"} = {
+		"M1" => "V1",
+		"M11" => "V11",
+		"M2" => "V2",
+		"z_score_category" => "AGA"
+	};
+	delete $metasModR->{"2"};
 	
 	try {
 		$err = "";
-		MetagDB::Export::webVis($classR, $metasModR, $tool);
+		($resOTU, $resTax, $resMeta) = ("") x 3;
+		($resOTU, $resTax, $resMeta) = MetagDB::Export::webVis($classR, $metasModR, "MicrobiomeAnalyst");
 	}
 	catch {
 		$err = $_;
+		print $err;
+		ok(1==2, 'Testing multiple sample names for one sample ID');
 	}
 	finally {
-		ok ($err =~ m/^ERROR.*Each ID in metadata/, 'Testing metadata invalid format [1/2]');
-	};
+		is ($resOTU, $expecOTU, 'Testing multiple sample names for one sample ID - OTU');
+		is ($resTax, $expecTax, 'Testing multiple sample names for one sample ID - taxonomy');
+		is ($resMeta, $expecMeta, 'Testing multiple sample names for one sample ID - metadata');
+	};	
 	
 	
 	#------------------------------------------------------------------------------#
@@ -1141,7 +1189,7 @@ sub test_webVis {
 		$err = $_;
 	}
 	finally {
-		ok ($err =~ m/^ERROR.*Sample names in metadata not unique/, 'Testing metadata invalid format [2/2]');
+		ok ($err =~ m/^ERROR.*Sample names must be unique/, 'Testing sample names not unique');
 	};
 	
 	
@@ -1196,25 +1244,6 @@ sub test_webVis {
 	#------------------------------------------------------------------------------#
 	# Test valid input (MicrobiomeAnalyst)
 	#------------------------------------------------------------------------------#
-	my $expecOTU = "#NAME\tS1\tS2\tS3\n" .
-		"OTU0\t11\t0\t0\n" .
-		"OTU1\t1\t0\t3\n" .
-		"OTU2\t0\t22\t0\n" .
-		"OTU3\t0\t2\t0\n" .
-		"OTU4\t0\t0\t33";
-	my $expecTax = "#TAXONOMY\tKingdom\tPhylum\tClass\tOrder\tFamily\tGenus\tSpecies\n" .
-		"OTU0\tK11\tP11\tC11\tO11\tF11\tG11\tS11\n" .
-		"OTU1\tK1\tP1\tC1\tO1\tF1\tG1\tS1\n" .
-		"OTU2\tK22\tP22\tC22\tO22\tF22\tG22\tS22\n" .
-		"OTU3\tK2\tP2\tC2\tO2\tF2\tG2\tS2\n" .
-		"OTU4\tK33\tP33\tC33\tO33\tF33\tG33\tS33";
-	my $expecMeta = "#NAME\tz_score_category\tM1\tM11\tM2\n" .
-		"S1\tSGA\tV1\tV11\tNA\n" .
-		"S2\tAGA\tV1\tV11\tV2\n" .
-		"S3\tNA\tNA\tNA\tNA";
-
-	my ($resOTU, $resTax, $resMeta) = ("") x 3;
-	
 	try {
 		$err = "";
 		($resOTU, $resTax, $resMeta) = ("") x 3;
