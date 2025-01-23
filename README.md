@@ -170,7 +170,7 @@ will assist you in the software development, as they will readily show, if some 
 your adjustments. If you think that your changes are useful for a wider audience, please open a pull request.
 
 ## Publication
-For further information, refer to our [manuscript](https://doi.org/10.1101/2024.06.11.598475).
+For further information, refer to our [manuscript](https://doi.org/10.1016/j.csbj.2024.12.031).
 Please cite the manuscript or the URL to this repository, if you use MetagenomicsDB in your research.
 
 ## Copyright
