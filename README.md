@@ -144,6 +144,10 @@ for MetaG and/or</br>
 </code></br>
 for Kraken 2.
 
+The importSGA.pl program will automatically update the materialized views. If, however,
+you intend to use a custom program to populate MetagenomicsDB, please make sure that you refresh
+the materialized views after each insert, update, or delete. 
+
 
 ## Exporting the example data to MicrobiomeAnalyst
 For the purpose of this example, all samples shall be exported from the database to
